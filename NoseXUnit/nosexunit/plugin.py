@@ -262,11 +262,11 @@ class XTest(XTestElmt):
     def _get_err_formated(self):
         '''Return the the formated error for output'''
         if self.err != None:
-            #return ''.join(traceback.format_exception(*self.err))
-            formated = ''
-            for line in traceback.format_exception(*self.err):
-                for l in line.split('\n')[:-1]: formated += l
-            return formated
+            return '\n'.join((''.join(traceback.format_exception(*self.err))).split('\n')[:-1])
+            #formated = ''
+            #for line in traceback.format_exception(*self.err):
+            #    for l in line.split('\n')[:-1]: formated += l
+            #return formated
         else: return None
 
     def writeXmlOnStream(self, stream):
