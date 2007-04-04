@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Set the python environement
+PYTHONHOME=$1
+export PYTHONHOME
+PATH=$PYTHONHOME/bin:$PATH
+export PATH
+LD_LIBRARY_PATH=$PYTHONHOME/lib
+export LD_LIBRARY_PATH
+
+# Get all the argument for nosetests except the first one
+shift 1
+
+# Install NoseXUnit and its dependences
+python setup.py install
+if [ $? -ne 0 ]
+then
+    echo "ERROR: failed to install NoseXUnit"
+    exit 1
+fi
+
+# Call nosetests
+nosetests $*
+exit $?
+

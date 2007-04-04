@@ -7,10 +7,10 @@ import traceback
 import nose.suite
 
 # If test mode, import the Plugin from xtest, else import the real one
-try:
+if __name__ == os.path.basename(__file__).split('.')[0]:
     from xtest import Plugin
-    print "WARNING: Mock mode for Plugin"
-except:
+    sys.stderr.write("WARNING: Mock mode for NoseXUnit")
+else:
     from nose.plugins.base import Plugin
 
 # Test result possibilities
