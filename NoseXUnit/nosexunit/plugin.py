@@ -28,7 +28,7 @@ UNK_TIME = 0
 XML_PREFIX = "TEST-"
 
 # The folders to excludes
-EX_SEARCH = ['.svn', ]
+EX_SEARCH = ['.svn', '.cvs', ]
 
 class XUnitException(StandardError):
     pass
@@ -320,6 +320,8 @@ class NoseXUnit(Plugin, object):
         parser.add_option("--xml-report-folder", action="store", default="target/xml-report", dest="report", help="Folder to output XML report to")
         parser.add_option("--source-folder", action="store", default="python/src", dest="src", help="Set the python's source folder, and add it in the path")
         parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path")
+        parser.add_option("--add-any-folder", action="store_true", default=False, dest="addAnyFolder", help="add also folders with no __init__.py file in the path")
+        
     
     def configure(self, options, config):
         Plugin.configure(self, options, config)
@@ -327,6 +329,7 @@ class NoseXUnit(Plugin, object):
         self.repfld = os.path.abspath(options.report)
         self.src = os.path.abspath(options.src)
         self.recursive = options.recursive
+        self.addAnyFolder = options.addAnyFolder
         
     def initialize(self):
         '''Set the environment'''
@@ -371,6 +374,8 @@ class NoseXUnit(Plugin, object):
 
     def wantDirectory(self, dirname):
         '''Define the wanted directory'''
+        if not self.addAnyFolder: return False
+
         if os.path.basename(dirname) in EX_SEARCH: return False
         elif os.path.exists(os.path.join(dirname, '__init__.py')): return False
         else: return True
@@ -378,6 +383,7 @@ class NoseXUnit(Plugin, object):
     def startTest(self, test):
         '''Define the operations to perform when starting a test'''
         self.start = time.time()
+                
         if self.isSuiteBegin(test):
             self.suite = XSuite(test)
             self.suite.start()

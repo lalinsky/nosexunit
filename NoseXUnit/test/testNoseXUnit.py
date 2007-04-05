@@ -88,6 +88,10 @@ class TestNoseXUnit(xtest.XTestCase):
     def testAddOptionsRecursive(self):
         options = self.getOptions(self.getPlugin(), ['--recursive', ])
         self.assertTrue(options.recursive)
+        
+    def testAddAnyFolder(self):
+        options = self.getOptions(self.getPlugin(), ['--add-any-folder', ])
+        self.assertTrue(options.addAnyFolder)
 
     def testBeginFailWhenNoSourceFolder(self):
         plug = self.getPluginWithWorkspace(False)
