@@ -8,16 +8,21 @@ export PATH
 LD_LIBRARY_PATH=$PYTHONHOME/lib
 export LD_LIBRARY_PATH
 
-# Get all the argument for nosetests except the first one
-shift 1
-
-# Install NoseXUnit and its dependences
-python setup.py install
-if [ $? -ne 0 ]
+# Get the goals for setup.py
+GOALS=$2
+if [ "${GOALS}" != "skip" ]
 then
-    echo "ERROR: failed to install NoseXUnit"
-    exit 1
+    # Launch the goals
+    python setup.py ${GOALS}
+    if [ $? -ne 0 ]
+    then
+        echo "ERROR: python setup.py ${GOALS} failed"
+        exit 1
+    fi
 fi
+
+# Get all the argument for nosetests except the first one
+shift 2
 
 # Call nosetests
 nosetests $*
