@@ -1,8 +1,5 @@
 #-*- coding: utf-8 -*-
-import os
-import sys
-
-import xtest
+import xtest.unit
 
 class TestXMock(xtest.XTestCase):
     

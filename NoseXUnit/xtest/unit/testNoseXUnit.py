@@ -1,21 +1,17 @@
 #-*- coding: utf-8 -*-
 import os
-import sys
 import shutil
 import optparse
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nosexunit'))
+import xtest.unit
 
-import xtest
 import plugin
 
 class TestNoseXUnit(xtest.XTestCase):
 
-    _dir = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-
     def setUp(self):
         xtest.XTestCase.setUp(self)
-        self.workspace = self.getProperty('workspace')
+        self.workspace = self.getUnitProperty('workspace')
         self.src = os.path.join(os.path.join(self.workspace, 'python'), 'src')
         self.test = os.path.join(os.path.join(self.workspace, 'python'), 'test')
         self.report = os.path.join(self.workspace, 'report')
@@ -108,15 +104,6 @@ class TestNoseXUnit(xtest.XTestCase):
         plug.begin()
         self.assertEquals([], os.listdir(self.report))
         
-    def testSrcFolderAddedInPath(self):
-        plug = self.getPluginWithWorkspace(False, srcs=['my_module.py', 'toto/my_module2.py'])
-        plug.begin()
-        import my_module
-        try:
-            import my_module2
-            self.failureException, "module should not have been imported"
-        except: pass
-
     def testSrcFolderAddedInPath(self):
         plug = self.getPluginWithWorkspace(False, srcs=['my_module.py', 'toto/my_module2.py'])
         plug.begin()

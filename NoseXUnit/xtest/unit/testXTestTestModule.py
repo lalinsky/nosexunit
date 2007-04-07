@@ -1,10 +1,6 @@
 #-*- coding: utf-8 -*-
-import os
-import sys
+import xtest.unit
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'nosexunit'))
-
-import xtest
 import plugin
 
 class TestXTestTestModule(xtest.XTestCase):
@@ -30,7 +26,7 @@ class TestXTestTestModule(xtest.XTestCase):
         test = plugin.XTest(plugin.ERROR, case, err=err)
         self.assertWriteOnStreamContains(["""<testcase classname="my_module" name="my_module" time="0.000"><error type="exceptions.StandardError">Traceback (most recent call last)""", """</error></testcase>""", ], test)
 
-    def testWriteOnXmlFailure(self):
+    def testWriteOnXmlError(self):
         case = xtest.MockTestModule('my_module')
         err = xtest.get_err(StandardError, 'StrandadError raised')
         test = plugin.XTest(plugin.FAIL, case, err=err)

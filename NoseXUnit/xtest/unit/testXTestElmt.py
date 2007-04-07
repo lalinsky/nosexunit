@@ -1,11 +1,8 @@
 #-*- coding: utf-8 -*-
-import os
-import sys
 import time
 
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'nosexunit'))
+import xtest.unit
 
-import xtest
 import plugin
 
 class TestXTestElmt(xtest.XTestCase):

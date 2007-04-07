@@ -9,29 +9,38 @@ import ConfigParser
 class XTestCase(unittest.TestCase):
     '''Test class for the project'''
 
-    _dir = None
+    _pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     def setUp(self):
         '''Get the properties from the property file'''
         unittest.TestCase.setUp(self)
         self._properties = {}
-        if self._dir != None:
-            pfile = None
-            if os.path.exists(os.path.join(self._dir, 'test.properties.model')):
-                pfile = os.path.join(self._dir, 'test.properties.model')
-                if os.path.exists(os.path.join(self._dir, 'test.properties')):
-                    pfile = os.path.join(self._dir, 'test.properties')
-                if pfile:
-                    parser = ConfigParser.ConfigParser()
-                    parser.read(pfile)
-                    for section in parser.sections():
-                        for option in parser.options(section):
-                            self._properties[option] = parser.get(section, option)
+        self._pfile = None
+        if os.path.exists(os.path.join(self._pdir, 'test.properties.model')):
+            self._pfile = os.path.join(self._pdir, 'test.properties.model')
+            if os.path.exists(os.path.join(self._pdir, 'test.properties')):
+                self._pfile = os.path.join(self._pdir, 'test.properties')
+            if self._pfile:
+                parser = ConfigParser.ConfigParser()
+                parser.read(self._pfile)
+                for section in parser.sections():
+                    self._properties[section] = {}
+                    for option in parser.options(section):
+                        self._properties[section][option] = parser.get(section, option)
 
-    def getProperty(self, property):
+    def getProperty(self, section, option):
         '''Get the value of the given property'''
-        assert self._properties.has_key(property), "No such property in your test.properties file: %s" % property
-        return self._properties[property]
+        assert self._properties.has_key(section), "No such section in your test.properties(.model) file: %s" % section
+        assert self._properties[section].has_key(option), "No such option in section %s in your test.properties(.model) file: %s" % option
+        return self._properties[section][option]
+
+    def getUnitProperty(self, option):
+        '''Get the value of the property in the unit section'''
+        return self.getProperty('unit', option)
+
+    def getIntProperty(self, option):
+        '''Get the value of the property in the integration section'''
+        return self.getProperty('int', option)
 
     def assertWriteXmlEquals(self, expected, rpath):
         '''Assert that the given file contain the expected string'''
