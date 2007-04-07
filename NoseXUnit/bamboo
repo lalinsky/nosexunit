@@ -25,6 +25,7 @@ fi
 shift 2
 
 # Call nosetests
-nosetests $*
+#nosetests $*
+nosetests --with-nosexunit --source-folder=.
 exit $?
 
