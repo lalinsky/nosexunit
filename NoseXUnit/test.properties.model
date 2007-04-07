@@ -2,7 +2,7 @@
 
 # Configuration for unit tests
 [unit]
-workspace=/Users/olivier/Workspace/eclipse/NoseXUnit/tmp
+workspace=/tmp/NoseXUnit/workspace
 
 # Configuration for integration tests
 [int]

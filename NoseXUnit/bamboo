@@ -26,6 +26,6 @@ shift 2
 
 # Call nosetests
 #nosetests $*
-nosetests --with-nosexunit --source-folder=.
+nosetests --with-nosexunit --source-folder=. --xml-report-folder=target/xml-report --where=.
 exit $?
 
