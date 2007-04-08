@@ -309,28 +309,34 @@ class XTest(XTestElmt):
 class NoseXUnit(Plugin, object):
 
     def help(self):
+        '''Help'''
         return "Output XML report of test status"
 
     def add_options(self, parser, env=os.environ):
+        '''Add lauch options for nosexunit'''
         Plugin.add_options(self, parser, env)
-        parser.add_option("--xml-report-folder", action="store", default="target/xml-report", dest="report", help="Folder to output XML report to")
-        parser.add_option("--source-folder", action="store", default="python/src", dest="src", help="Set the python's source folder, and add it in the path")
-        parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path")
-        parser.add_option("--add-any-folder", action="store_true", default=False, dest="addAnyFolder", help="add also folders with no __init__.py file in the path")
+        parser.add_option("--xml-report-folder", action="store", default="target/xml-report", dest="report", help="Folder to output XML report to (default is target/xml-report).")
+        parser.add_option("--source-folder", action="store", default=None, dest="src", help="Set the python's source folder, and add it in the path (optional).")
+        parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path if they don't contain __init__.py file. Works only if --source-folder is defined.")
+        parser.add_option("--want-folder", action="store_true", default=False, dest="wantfld", help="Search tests in folders with no __init__.py file (default does nothing).")
         
     
     def configure(self, options, config):
+        '''Configure the plugin'''
         Plugin.configure(self, options, config)
         self.conf = config
         self.repfld = os.path.abspath(options.report)
-        self.src = os.path.abspath(options.src)
+        if options.src != None: self.src = os.path.abspath(options.src)
+        else: self.src = None
         self.recursive = options.recursive
-        self.addAnyFolder = options.addAnyFolder
+        self.wantfld = options.wantfld
         
     def initialize(self):
         '''Set the environment'''
-        if not os.path.isdir(self.src):
+        # If a source folder is specified, check the existance
+        if self.src != None and not os.path.isdir(self.src):
             raise XUnitException("the source folder doesn't exists: %s" % self.src)
+        # Create the report folder if doesn't exists, else clean it
         if not os.path.isdir(self.repfld):
             if os.path.isfile(self.repfld):
                 raise XUnitException("the report folder exists but is not a folder: %s" % self.repfld)
@@ -338,12 +344,15 @@ class NoseXUnit(Plugin, object):
         else:
             for elmt in os.listdir(self.repfld):
                 if elmt.startswith(XML_PREFIX): os.remove(os.path.join(self.repfld, elmt))
-        if not self.recursive: sys.path.append(self.src)
-        else:
-            for dirpath, dirnames, filenames in os.walk(self.src):
-                for elmt in EX_SEARCH:
-                    if elmt in dirnames: dirnames.remove(elmt)
-                sys.path.append(dirpath)
+        # Add the source folder and eventually all his tree in the sys.path
+        if self.src != None:
+            if not self.recursive: sys.path.append(self.src)
+            else:
+                for dirpath, dirnames, filenames in os.walk(self.src):
+                    for elmt in EX_SEARCH:
+                        if elmt in dirnames: dirnames.remove(elmt)
+                    if not os.path.exists(os.path.join(dirpath, '__init__.py')):
+                        sys.path.append(dirpath)
 
     def begin(self):
         '''Initialize the plugin'''
@@ -370,11 +379,9 @@ class NoseXUnit(Plugin, object):
 
     def wantDirectory(self, dirname):
         '''Define the wanted directory'''
-        if not self.addAnyFolder: return False
-
-        if os.path.basename(dirname) in EX_SEARCH: return False
-        elif os.path.exists(os.path.join(dirname, '__init__.py')): return False
-        else: return True
+        if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
+            return True
+        else: return
         
     def startTest(self, test):
         '''Define the operations to perform when starting a test'''

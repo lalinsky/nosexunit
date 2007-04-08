@@ -70,8 +70,9 @@ class TestNoseXUnit(xtest.XTestCase):
     def testAddOptionsDefault(self):
         options = self.getOptions(self.getPlugin())
         self.assertEquals(options.report, 'target/xml-report')
-        self.assertEquals(options.src, 'python/src')
+        self.assertEquals(options.src, None)
         self.assertFalse(options.recursive)
+        self.assertFalse(options.wantfld)
 
     def testAddOptionsReport(self):
         options = self.getOptions(self.getPlugin(), ['--xml-report-folder', 'hello/guy', ])
@@ -86,8 +87,8 @@ class TestNoseXUnit(xtest.XTestCase):
         self.assertTrue(options.recursive)
         
     def testAddAnyFolder(self):
-        options = self.getOptions(self.getPlugin(), ['--add-any-folder', ])
-        self.assertTrue(options.addAnyFolder)
+        options = self.getOptions(self.getPlugin(), ['--want-folder', ])
+        self.assertTrue(options.wantfld)
 
     def testBeginFailWhenNoSourceFolder(self):
         plug = self.getPluginWithWorkspace(False)
