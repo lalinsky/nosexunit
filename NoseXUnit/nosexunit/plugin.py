@@ -346,8 +346,8 @@ class NoseXUnit(Plugin, object):
                 if elmt.startswith(XML_PREFIX): os.remove(os.path.join(self.repfld, elmt))
         # Add the source folder and eventually all his tree in the sys.path
         if self.src != None:
-            if not self.recursive: sys.path.append(self.src)
-            else:
+            sys.path.append(self.src)
+            if self.recursive:
                 for dirpath, dirnames, filenames in os.walk(self.src):
                     for elmt in EX_SEARCH:
                         if elmt in dirnames: dirnames.remove(elmt)
