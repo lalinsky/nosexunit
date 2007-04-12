@@ -24,13 +24,13 @@ class TestXTestTestModule(xtest.XTestCase):
         case = xtest.MockTestModule('my_module')
         err = xtest.get_err(StandardError, 'StrandadError raised')
         test = plugin.XTest(plugin.ERROR, case, err=err)
-        self.assertWriteOnStreamContains(["""<testcase classname="my_module" name="my_module" time="0.000"><error type="exceptions.StandardError">Traceback (most recent call last)""", """</error></testcase>""", ], test)
+        self.assertWriteOnStreamContains(["""<testcase classname="my_module" name="my_module" time="0.000"><error type="exceptions.StandardError"><![CDATA[Traceback (most recent call last)""", """]]></error></testcase>""", ], test)
 
     def testWriteOnXmlError(self):
         case = xtest.MockTestModule('my_module')
         err = xtest.get_err(StandardError, 'StrandadError raised')
         test = plugin.XTest(plugin.FAIL, case, err=err)
-        self.assertWriteOnStreamContains(["""<testcase classname="my_module" name="my_module" time="0.000"><failure type="exceptions.StandardError">Traceback (most recent call last)""", """</failure></testcase>""", ], test)
+        self.assertWriteOnStreamContains(["""<testcase classname="my_module" name="my_module" time="0.000"><failure type="exceptions.StandardError"><![CDATA[Traceback (most recent call last)""", """]]></failure></testcase>""", ], test)
         
     def testWriteOnXmlSkip(self):
         case = xtest.MockTestModule('my_module')

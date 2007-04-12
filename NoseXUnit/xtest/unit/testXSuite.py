@@ -100,9 +100,9 @@ class TestXSuite(xtest.XTestCase):
         suite = self.getSuite()
         suite.setStdout('stdout')
         suite.setStderr('stderr')
-        expect = ["""<?xml version="1.0" encoding="UTF-8"?><testsuite name="my_module" tests="4" errors="1" failures="1" time="0.000"><testcase classname="my_module.my_class" name="my_test1" time="0.000"/><testcase classname="my_module.my_class" name="my_test2" time="0.000"/><testcase classname="my_module.my_class" name="my_test3" time="0.000"><failure type="exceptions.StandardError">Traceback (most recent call last)""",
-                  """StandardError raised</failure></testcase><testcase classname="my_module.my_class" name="my_test4" time="0.000"><error type="exceptions.StandardError">Traceback (most recent call last)""",
-                  """StandardError2 raised</error></testcase><system-out><![CDATA[stdout]]></system-out><system-err><![CDATA[stderr]]></system-err></testsuite>""", ]
+        expect = ["""<?xml version="1.0" encoding="UTF-8"?><testsuite name="my_module" tests="4" errors="1" failures="1" time="0.000"><testcase classname="my_module.my_class" name="my_test1" time="0.000"/><testcase classname="my_module.my_class" name="my_test2" time="0.000"/><testcase classname="my_module.my_class" name="my_test3" time="0.000"><failure type="exceptions.StandardError"><![CDATA[Traceback (most recent call last)""",
+                  """StandardError raised]]></failure></testcase><testcase classname="my_module.my_class" name="my_test4" time="0.000"><error type="exceptions.StandardError"><![CDATA[Traceback (most recent call last)""",
+                  """StandardError2 raised]]></error></testcase><system-out><![CDATA[stdout]]></system-out><system-err><![CDATA[stderr]]></system-err></testsuite>""", ]
         self.assertWriteOnStreamContains(expect, suite)  
 
 if __name__=="__main__":
