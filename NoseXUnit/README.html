@@ -1,0 +1,230 @@
+<html>
+  <head>
+    <title>NoseXUnit: JUnit like XML reporting for PyUnit</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 10px 40px;
+        font: x-small Georgia,Serif;
+        font-size: small;
+      }
+      a:link {
+        color: #58a;
+        text-decoration: none;
+      }
+      a:visited {
+        color: #969;
+        text-decoration: none;
+      }
+      a:hover {
+         color: #c60;
+         text-decoration: underline;
+      }
+      #menu {
+        padding-left: 1em;
+        padding-right: 1em;
+        padding-bottom: 10px;
+        margin-left: 20px;
+        min-width: 200px;
+        width: 20%;
+        border-left: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        background-color: #fff;
+        float: right;
+      }
+      #main {
+        margin: 0px;
+        padding: 0px;
+        padding-right: 20px;
+        width: 70%;
+        float: left;
+      }      
+      h1 {
+        font-size: 140%;
+        margin-top: 0;
+      }
+      .section h1 {
+        font-size: 120%;
+      }
+      .section h2 {
+        font-size: 105%;
+      }
+      pre.literal-block {
+        font: small;
+        background: #ddd;
+      }
+      #menu ul {
+        margin: 0 1em .25em;
+        padding: 0;
+        list-style:none;
+      }
+      #menu h2 {
+        font-size: 100%;
+        color: #999;
+        margin: 0 .5em;
+        padding: 0;
+      }
+      #menu ul li {
+        margin: 0px;
+        padding: 0px 0px 0px 15px;
+        text-indent:-15px;
+      }
+      #menu p, #menu ol li {
+        font-size: 90%;
+        color:#666;
+        margin: 0 1em .5em;
+      }
+      #menu ul li {
+        font-size: 90%;
+        color:#666;
+      }
+      #menu dd {
+        margin: 0;
+        padding:0 0 .25em 15px;
+      }
+      #news {
+        border: 1px solid #999;
+        background-color: #eef;
+        padding: 4px;
+        padding-right: 8px;
+      }
+      #news h2 {
+        margin-top: 0px;
+        font-size: 105%;
+      }
+      #news li p {
+        margin-left: 1.5em;
+      }
+      #news li p.first {
+        margin-left: 0;
+        font-weight: bold;
+      }
+      #news p {
+        margin-bottom: 0px;
+      }
+      p.note {
+        background: #fed;
+        border: 1px solid black;
+        padding: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu">
+      <h2><a href="https://sourceforge.net/projects/nosexunit/">Download</a></h2>
+      <p>Current version: 0.1.0</p>
+   
+      <h2><a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit on Sourceforge</a></h2>
+      <p>Report bugs, request features, browse source...</p>
+      
+      <h2>See</h2>
+      
+      <ul>
+        <li><a href="http://code.google.com/p/python-nose/">python-nose</a>
+          <br />The nose project.
+        </li>
+        <li>
+          <a href="http://jra1mw.cvs.cern.ch:8180/cgi-bin/jra1mw.cgi/org.glite.testing.unit/config/JUnitXSchema.xsd?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+            JUnit XML Schema
+          </a>
+          <br />Schema of the JUnit standard output.
+        </li>
+        <li><a href="http://www.atlassian.com/software/bamboo/">Bamboo</a>
+          <br />Interesting test reports.
+        </li>
+      </ul>
+      
+    </div>
+    <div id="main">
+
+      <h1>NoseXUnit: JUnit like XML reporting for PyUnit</h1>
+
+      <p>NoseXUnit provide a convenient way to produce JUnit like XML reports with PyUnit.
+      </p>
+      
+      <div id="news">
+        <h2>News</h2>
+        <p>This is the first version of NoseXUnit. Don't hesitate to report bugs and request
+        features on <a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit Web Page</a>.</p>
+      </div>
+
+      <h2>Backgroud</h2>
+
+      <p>On the one hand, most of complex applications mix different languages and frameworks.
+      On the other hand, test frameworks don't provide standard outputs.
+      This makes difficult to generate an overall report of the tests for your aplication.
+      However, some Java tests frameworks like JUnit with <a href="http://maven.apache.org/surefire/">Surefire</a>
+      outputs convenient test report in a simple XML format.
+      This makes further processing simple and convenient for softwares.
+      For example, <a href="http://www.atlassian.com/software/bamboo/">Bamboo</a> creates
+      interesting reports thanks these XML reports.</p>
+      
+      <p class="note">Our goal is to provide a way to produce test reports in this simple XML format with PyUnit.</p>
+
+      <h2>Install</h2>
+
+      <p>NoseXUnit is a plugin for <a href="http://code.google.com/p/python-nose/">python-nose</a>.
+      Nose is a convenient way to play your PyUnit test.</p>
+
+      <p>Use the download link at right to download the source package, and install in the normal fashion.
+      Untar the source package, step in the new directory, and:
+        <pre>python setup.py install</pre>
+      </p>
+
+      <p>If setuptools is already installed but too old, you may see an
+        error like this:
+        <blockquote>
+          <tt>The required version of setuptools (>=0.6c5) is not available, and
+          can't be installed while this script is running. Please install
+          a more recent version first.</tt>
+        </blockquote>
+        In that case, you'll need to update your setuptools install first by running:
+        <pre>python ez_setup.py -U setuptools</pre>
+      </p>
+      
+      <p>If nose is already installed but too old, you may see an
+        error like this:
+        <blockquote>
+          <tt>The required version of nose (>=0.9.1) is not available, and
+          can't be installed while this script is running. Please install
+          a more recent version first.</tt>
+        </blockquote>
+        In that case, you'll need to update your nose install first by running:
+        <pre>python ez_setup.py -U nose</pre>
+      </p>
+
+      <h2>Nose Usage</h2>
+      
+      <p>See <a href="http://code.google.com/p/python-nose/">here</a>.</p>
+      
+      <h2>NoseXUnit Usage</h2>
+
+      <p>NoseXUnit launch options can be display by running:
+      <pre>nosetests --help</pre>
+      Four options are available:
+<pre>
+--with-nosexunit           Enable plugin NoseXUnit: Output XML report of test
+                           status [NOSE_WITH_NOSEXUNIT]
+--xml-report-folder=REPORT
+                           Folder to output XML report to
+--source-folder=SRC        Set the python's source folder, and add it in the path
+--recursive                Walk in the source folder to add deeper folders in the
+                           path
+</pre>
+      
+      <h2>Bug reports</h2>
+
+      <p>Please report bugs and make feature
+      requests <a href="https://sourceforge.net/projects/nosexunit/">here</a>.</p>
+      
+      <h2><a name="changelog"></a>Changelog</h2>
+       
+      <p>0.1.0</p>
+      <ul class="simple">
+        <li>First version</li>
+      </ul>
+ 
+    </div>
+    
+  </body>
+</html>
