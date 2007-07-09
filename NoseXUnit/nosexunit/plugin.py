@@ -168,7 +168,10 @@ class XSuite(XTestElmt):
 
     def getName(self):
         '''Get the name of the suite'''
-        return self.elmt.moduleName
+        attrs = dir(self.elmt)
+        if 'moduleName' in attrs: return self.elmt.moduleName
+        elif '__module__' in attrs: return self.elmt.__module__
+        else: return UNK_DESC
 
     def addTest(self, test):
         '''Add a test in the right section'''
@@ -386,7 +389,6 @@ class NoseXUnit(Plugin, object):
     def startTest(self, test):
         '''Define the operations to perform when starting a test'''
         self.start = time.time()
-                
         if self.isSuiteBegin(test):
             self.suite = XSuite(test)
             self.suite.start()
@@ -397,6 +399,7 @@ class NoseXUnit(Plugin, object):
 
     def isSuiteBegin(self, test):
         '''Return True if this is a new suite which begins'''
+        if self.suite == None: return True
         try: return isinstance(test, nose.suite.TestModule)
         except: return False
 
