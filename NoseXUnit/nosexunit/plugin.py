@@ -7,6 +7,7 @@ import traceback
 import nose.suite
 
 # If test mode, import the Plugin from xtest, else import the real one
+# --------------------------------------------------------------------
 if __name__ == os.path.basename(__file__).split('.')[0]:
     from xtest import Plugin
     sys.stderr.write("WARNING: Mock mode for NoseXUnit")
@@ -14,24 +15,35 @@ else:
     from nose.plugins.base import Plugin
 
 # Test result possibilities
+# -------------------------
+# Test success
 SUCCESS = 0
+# Test failure
 FAIL = 1
+# Test error
 ERROR = 2
+# Test Skipped
 SKIP = 3
+# Test deprecated
 DEPRECATED = 4
 
-# Values fr non-specified fields
-UNK_DESC = "unknown"
+# Value for unknown execution time
+# --------------------------------
 UNK_TIME = 0
 
 # Test output prefix
+# ------------------
 XML_PREFIX = "TEST-"
 
 # The folders to excludes
+# -----------------------
 EX_SEARCH = ['.svn', '.cvs', ]
 
+
 class XUnitException(StandardError):
+    '''Exception for NoseXUnit process'''
     pass
+
 
 class StdRecorder:
     '''Class to capture the standard outputs'''
@@ -85,6 +97,7 @@ class StdOutRecoder(StdRecorder):
         StdRecorder.end(self)
         sys.stdout = self.save
 
+
 class StdErrRecorder(StdRecorder):
     '''Class to record the error output'''
     
@@ -131,21 +144,6 @@ class XTestElmt:
             return self.end - self.begin
         else: return UNK_TIME
 
-    def __eq__(self, elmt):
-        '''
-        Equality fonction for the test elements.
-        Be carefull to the operators
-        The first element of the test must of the type XTestElmt if the second one is TestCase or TestModule'''
-        if isinstance(elmt, XTestElmt):
-            return self.elmt == elmt.elmt
-        else:
-            try: return self.elmt == elmt
-            except: return False
-            
-    def equals(self, elmt):
-        '''Same as equals, but remove the __eq__ ambiguity'''
-        return self == elmt
-
 
 class XSuite(XTestElmt):
     '''Class for the suite notion'''
@@ -168,10 +166,7 @@ class XSuite(XTestElmt):
 
     def getName(self):
         '''Get the name of the suite'''
-        attrs = dir(self.elmt)
-        if 'moduleName' in attrs: return self.elmt.moduleName
-        elif '__module__' in attrs: return self.elmt.__module__
-        else: return UNK_DESC
+        return getSuiteName(self.elmt)
 
     def addTest(self, test):
         '''Add a test in the right section'''
@@ -200,25 +195,42 @@ class XSuite(XTestElmt):
             nbrTests += self.getNbrTestsFromKind(kind)
         return nbrTests
 
-    def getXmlPath(self, folder):
+    def getXmlName(self, folder):
+        '''
+        Return the name of the suite for the XML
+        Avoid data erasing
+        '''
+        name = self.getName()
+        path = self.getXmlPath(folder, name)
+        if not os.path.exists(path): return name
+        else:
+            cpt = 1
+            while True:
+                name = "%s.%d" % self.getName()
+                path = self.getXmlPath(folder, name)
+                if not os.path.exists(path): return name
+                cpt += 1
+
+    def getXmlPath(self, folder, xml_name):
         '''Return the output xml path'''
-        return os.path.join(folder, '%s%s.xml' % (XML_PREFIX, self.getName()))
+        return os.path.join(folder, '%s%s.xml' % (XML_PREFIX, xml_name))
 
     def writeXml(self, folder):
         '''Write the xml file on disk'''
         if self.getNbrTestsFromKinds([SUCCESS, FAIL, ERROR, ]) > 0:
-            xpath = self.getXmlPath(folder)
+            xname = self.getXmlName(folder)
+            xpath = self.getXmlPath(folder, xname)
             xfile = open(xpath, 'w')
-            self.writeXmlOnStream(xfile)
+            self.writeXmlOnStream(xfile, xname)
             xfile.close()
 
-    def writeXmlOnStream(self, stream):
+    def writeXmlOnStream(self, stream, xname):
         '''Write the test suite on the stream'''
         nbrTests = self.getNbrTestsFromKinds([SUCCESS, ERROR, FAIL, ])
         nbrFails = self.getNbrTestsFromKind(FAIL)
         nbrErrors = self.getNbrTestsFromKind(ERROR)
         stream.write('<?xml version="1.0" encoding="UTF-8"?>')
-        stream.write('<testsuite name="%s" tests="%d" errors="%d" failures="%d" time="%.3f">' % (self.getName(), nbrTests, nbrErrors, nbrFails, self.getTime()))
+        stream.write('<testsuite name="%s" tests="%d" errors="%d" failures="%d" time="%.3f">' % (xname, nbrTests, nbrErrors, nbrFails, self.getTime()))
         for test in self.tests:
             test.writeXmlOnStream(stream)
         stream.write('<system-out><![CDATA[%s]]></system-out>' % self.stdout)
@@ -246,15 +258,12 @@ class XTest(XTestElmt):
             return self.elmt.id().split('.')[-1]
         elif isinstance(self.elmt, nose.suite.TestModule):
             return self.elmt.moduleName
-        else: return UNK_DESC
+        elif isinstance(test, nose.suite.TestDir):
+            return self.elmt.module
 
     def getClass(self):
         '''Return the class name'''
-        if isinstance(self.elmt, unittest.TestCase):
-            return '.'.join(self.elmt.id().split('.')[:-1])
-        elif isinstance(self.elmt, nose.suite.TestModule):
-            return self.elmt.moduleName
-        else: return UNK_DESC
+        return getSuiteName(self.elmt)
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
@@ -282,32 +291,6 @@ class XTest(XTestElmt):
                 stream.write('</%s>' % tag)
                 stream.write('</testcase>')
 
-
-#class XInitSuite(XSuite):
-#    '''Suite which check that there are __init__.py in the tests folder'''
-#    
-#    def __init__(self):
-#        '''Init the init suite'''
-#        XSuite.__init__(self, None)
-#    
-#    def getName(self):
-#        '''Get the name of the suite'''
-#        return 'NoseXUnitInitSuite'
-#
-#class XInitTest(XTest):
-#    '''Test taht check that there are __init__.py in the test folder'''
-#    
-#    def getName(self):
-#        '''Get the name of the test case'''
-#        name = 'FindInitIn'
-#        for fld in self.elmt.split(os.sep):
-#            if fld != '': name += fld.capitalize().replace(':', 'TwoPoints').replace('.', 'Point').replace('_', 'Underscore')
-#        return name
-#    
-#    def getClass(self):
-#        '''Get the class of the test'''
-#        return 'NoseXUnitPlugin'
-    
 
 class NoseXUnit(Plugin, object):
 
@@ -364,21 +347,6 @@ class NoseXUnit(Plugin, object):
         self.start = None
         self.stdout = StdOutRecoder()
         self.stderr = StdErrRecorder()
-        #initSuite = XInitSuite()
-        #for where in self.conf.where:
-        #    for dirpath, dirnames, filenames in os.walk(where):
-        #        if '.svn' in dirnames: dirnames.remove('.svn')
-        #        for dirname in dirnames:
-        #            subdir = os.path.join(dirpath, dirname)
-        #            init = os.path.join(subdir, '__init__.py')
-        #            if not os.path.isfile(init):
-        #                try:
-        #                    raise XUnitException("can't find __init__.py in the following folder: %s" % subdir)
-        #                except Exception, e:
-        #                    err = sys.exc_info()
-        #                    initTest = XInitTest(ERROR, subdir, err=err)
-        #                    initSuite.addTest(initTest)
-        #initSuite.writeXml(self.repfld)            
 
     def wantDirectory(self, dirname):
         '''Define the wanted directory'''
@@ -390,23 +358,26 @@ class NoseXUnit(Plugin, object):
         '''Define the operations to perform when starting a test'''
         self.start = time.time()
         if self.isSuiteBegin(test):
-            self.suite = XSuite(test)
-            self.suite.start()
-            self.stderr.reset()
-            self.stdout.reset()
-            self.stderr.start()
-            self.stdout.start()
+            self.stopSuite()
+            self.startSuite(test)
+
+    def startSuite(self, test):
+        '''Start a new suite'''
+        self.suite = XSuite(test)
+        self.suite.start()
+        self.stderr.reset()
+        self.stdout.reset()
+        self.stderr.start()
+        self.stdout.start()
 
     def isSuiteBegin(self, test):
         '''Return True if this is a new suite which begins'''
-        if self.suite == None: return True
-        try: return isinstance(test, nose.suite.TestModule)
-        except: return False
-
-    def isSuiteEnd(self, test):
-        '''Return True if the current suite is ending'''
-        try: return self.suite.equals(test)
-        except: return False
+        if self.suite == None:
+            return True
+        elif isinstance(test, unittest.TestCase):
+            return False
+        else:
+            return self.suite.elmt != test
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
         '''Add a new test result in the current suite'''
@@ -435,9 +406,9 @@ class NoseXUnit(Plugin, object):
         '''Add a successful test'''
         self.addTestCase(SUCCESS, test, capt=capt)
 
-    def stopTest(self, test):
-        '''Stop the test'''
-        if self.isSuiteEnd(test):
+    def stopSuite(self):
+        '''Stop the current suite'''
+        if self.suite != None:
             self.stdout.stop()
             self.stderr.stop()
             self.suite.stop()
@@ -448,7 +419,20 @@ class NoseXUnit(Plugin, object):
 
     def finalize(self, result):
         '''Set the old standard outputs'''
+        self.stopSuite()
         self.stderr.end()
         self.stdout.end()
 
-    
+
+def getSuiteName(test):
+    '''Return the name of the suite for the given test'''
+    if isinstance(test, unittest.TestCase):
+        return "%s.%s" % (test.__module__, test.__class__.__name__)
+    elif isinstance(test, nose.suite.TestClass):
+        return "%s.%s" % (test.cls.__module__, test.cls.__name__)
+    elif isinstance(test, nose.suite.TestModule):
+        return test.moduleName
+    elif isinstance(test, nose.suite.TestDir):
+        return test.module
+
+ 
