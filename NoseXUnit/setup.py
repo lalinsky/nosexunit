@@ -21,7 +21,7 @@ setup(
         'Translations: English',
         'User Interface: Plugins',
         ],
-    install_requires = [ "nose >= 0.9.2", ],
+    install_requires = [ "nose >= 0.10.0", ],
     entry_points = {'nose.plugins': [ 'nosexunit = nosexunit.plugin:NoseXUnit' ] },
     test_suite = 'nose.collector',
 )

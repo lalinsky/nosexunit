@@ -116,9 +116,8 @@ class StdErrRecorder(StdRecorder):
 class XTestElmt:
     '''Root class for suites and tests'''
 
-    def __init__(self, elmt):
+    def __init__(self):
         '''Init the test element'''
-        self.elmt = elmt
         self.begin = None
         self.end = None
 
@@ -148,9 +147,11 @@ class XTestElmt:
 class XSuite(XTestElmt):
     '''Class for the suite notion'''
 
-    def __init__(self, elmt):
+    def __init__(self, filename, module):
         '''Init the suite'''
-        XTestElmt.__init__(self, elmt)
+        XTestElmt.__init__(self)
+        self.filename = filename
+        self.module = module
         self.tests = []
         self.count = {}
         self.stdout = ''
@@ -166,7 +167,7 @@ class XSuite(XTestElmt):
 
     def getName(self):
         '''Get the name of the suite'''
-        return getSuiteName(self.elmt)
+        return self.module
 
     def addTest(self, test):
         '''Add a test in the right section'''
@@ -206,7 +207,7 @@ class XSuite(XTestElmt):
         else:
             cpt = 1
             while True:
-                name = "%s.%d" % self.getName()
+                name = "%s.%d" % (self.getName(), cpt)
                 path = self.getXmlPath(folder, name)
                 if not os.path.exists(path): return name
                 cpt += 1
@@ -242,7 +243,8 @@ class XTest(XTestElmt):
     '''Class for the test notion'''
 
     def __init__(self, kind, elmt, err=None, capt=None, tb_info=None):
-        XTestElmt.__init__(self, elmt)
+        XTestElmt.__init__(self)
+        self.elmt = elmt
         self.kind = kind
         self.err = err
         self.capt = capt
@@ -254,16 +256,18 @@ class XTest(XTestElmt):
 
     def getName(self):
         '''Return the name of the method'''
-        if isinstance(self.elmt, unittest.TestCase):
-            return self.elmt.id().split('.')[-1]
-        elif isinstance(self.elmt, nose.suite.TestModule):
-            return self.elmt.moduleName
-        elif isinstance(test, nose.suite.TestDir):
-            return self.elmt.module
+        #if isinstance(self.elmt, unittest.TestCase):
+        #    return self.elmt.id().split('.')[-1]
+        #elif isinstance(self.elmt, nose.suite.TestModule):
+        #    return self.elmt.moduleName
+        #elif isinstance(test, nose.suite.TestDir):
+        #    return self.elmt.module
+        return self.elmt.id().split('.')[-1]
 
     def getClass(self):
         '''Return the class name'''
-        return getSuiteName(self.elmt)
+        #return getSuiteName(self.elmt)
+        return "%s.%s" % (self.elmt.__module__, self.elmt.__class__.__name__)
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
@@ -348,36 +352,63 @@ class NoseXUnit(Plugin, object):
         self.stdout = StdOutRecoder()
         self.stderr = StdErrRecorder()
 
-    def wantDirectory(self, dirname):
-        '''Define the wanted directory'''
-        if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
-            return True
-        else: return
+    #def wantDirectory(self, dirname):
+    #    '''Define the wanted directory'''
+    #    if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
+    #        return True
         
+    #def beforeImport(self, filename, module):
+    #    print "before import %s" % module
+
+    def afterImport(self, filename, module):
+        #print "after import %s" % module
+        self.stopSuite()
+        self.startSuite(filename, module)
+
+    #def afterContext(self):
+    #    print "after context"
+
+    #def afterDirectory(self, path):
+    #    print "after dir %s" % path
+
+    #def beforeContext(self):
+    #    print "before context"
+
+    #def beforeDirectory(self, path):
+    #    print "before dir %s" % path
+
+    def beforeTest(self, test):
+        print "before test %s" % str(test)
+
+    def afterTest(self, test):
+        print "after test %s" % str(test)
+
     def startTest(self, test):
         '''Define the operations to perform when starting a test'''
+        #print "startTest"
         self.start = time.time()
-        if self.isSuiteBegin(test):
-            self.stopSuite()
-            self.startSuite(test)
+        #if self.isSuiteBegin(test):
+        #    self.stopSuite()
+        #    self.startSuite(test)
 
-    def startSuite(self, test):
+    def startSuite(self, filename, module):
         '''Start a new suite'''
-        self.suite = XSuite(test)
+        self.suite = XSuite(filename, module)
         self.suite.start()
         self.stderr.reset()
         self.stdout.reset()
         self.stderr.start()
         self.stdout.start()
 
-    def isSuiteBegin(self, test):
-        '''Return True if this is a new suite which begins'''
-        if self.suite == None:
-            return True
-        elif isinstance(test, unittest.TestCase):
-            return False
-        else:
-            return self.suite.elmt != test
+    #def isSuiteBegin(self, test):
+    #    '''Return True if this is a new suite which begins'''
+    #    print "isSuiteBegin"
+    #    if self.suite == None:
+    #        return True
+    #    elif isinstance(test, unittest.TestCase):
+    #        return False
+    #    else:
+    #        return self.suite.elmt != test
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
         '''Add a new test result in the current suite'''
@@ -424,15 +455,15 @@ class NoseXUnit(Plugin, object):
         self.stdout.end()
 
 
-def getSuiteName(test):
-    '''Return the name of the suite for the given test'''
-    if isinstance(test, unittest.TestCase):
-        return "%s.%s" % (test.__module__, test.__class__.__name__)
-    elif isinstance(test, nose.suite.TestClass):
-        return "%s.%s" % (test.cls.__module__, test.cls.__name__)
-    elif isinstance(test, nose.suite.TestModule):
-        return test.moduleName
-    elif isinstance(test, nose.suite.TestDir):
-        return test.module
+#def getSuiteName(test):
+#    '''Return the name of the suite for the given test'''
+#    if isinstance(test, unittest.TestCase):
+#        return "%s.%s" % (test.__module__, test.__class__.__name__)
+#    elif isinstance(test, nose.suite.TestClass):
+#        return "%s.%s" % (test.cls.__module__, test.cls.__name__)
+#    elif isinstance(test, nose.suite.TestModule):
+#        return test.moduleName
+#    elif isinstance(test, nose.suite.TestDir):
+#        return test.module
 
  
