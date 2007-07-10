@@ -146,10 +146,9 @@ class XTestElmt:
 class XSuite(XTestElmt):
     '''Class for the suite notion'''
 
-    def __init__(self, filename, module):
+    def __init__(self, module):
         '''Init the suite'''
         XTestElmt.__init__(self)
-        self.filename = filename
         self.module = module
         self.tests = []
         self.count = {}
@@ -347,19 +346,25 @@ class NoseXUnit(Plugin, object):
     def afterImport(self, filename, module):
         '''Trigger a new suite after each import'''
         self.stopSuite()
-        self.startSuite(filename, module)
+        self.startSuite(module)
 
-    def startSuite(self, filename, module):
+    def startSuite(self, module):
         '''Start a new suite'''
-        self.suite = XSuite(filename, module)
+        self.suite = XSuite(module)
         self.suite.start()
         self.stderr.reset()
         self.stdout.reset()
         self.stderr.start()
         self.stdout.start()
 
+    def assertSuite(self, test):
+        '''Check that suite exists. If not exists, create a new one'''
+        if self.suite == None:
+            self.startSuite(test.__module__)
+
     def startTest(self, test):
         '''Record starting time'''
+        self.assertSuite(test)
         self.start = time.time()
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
