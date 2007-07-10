@@ -2,7 +2,6 @@
 import os
 import sys
 import time
-import unittest
 import traceback
 import nose.suite
 
@@ -243,6 +242,7 @@ class XTest(XTestElmt):
     '''Class for the test notion'''
 
     def __init__(self, kind, elmt, err=None, capt=None, tb_info=None):
+        '''Init the test result'''
         XTestElmt.__init__(self)
         self.elmt = elmt
         self.kind = kind
@@ -256,17 +256,10 @@ class XTest(XTestElmt):
 
     def getName(self):
         '''Return the name of the method'''
-        #if isinstance(self.elmt, unittest.TestCase):
-        #    return self.elmt.id().split('.')[-1]
-        #elif isinstance(self.elmt, nose.suite.TestModule):
-        #    return self.elmt.moduleName
-        #elif isinstance(test, nose.suite.TestDir):
-        #    return self.elmt.module
         return self.elmt.id().split('.')[-1]
 
     def getClass(self):
         '''Return the class name'''
-        #return getSuiteName(self.elmt)
         return "%s.%s" % (self.elmt.__module__, self.elmt.__class__.__name__)
 
     def _get_err_type(self):
@@ -310,7 +303,6 @@ class NoseXUnit(Plugin, object):
         parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path if they don't contain __init__.py file. Works only if --source-folder is defined.")
         parser.add_option("--want-folder", action="store_true", default=False, dest="wantfld", help="Search tests in folders with no __init__.py file (default does nothing).")
         
-    
     def configure(self, options, config):
         '''Configure the plugin'''
         Plugin.configure(self, options, config)
@@ -352,44 +344,10 @@ class NoseXUnit(Plugin, object):
         self.stdout = StdOutRecoder()
         self.stderr = StdErrRecorder()
 
-    #def wantDirectory(self, dirname):
-    #    '''Define the wanted directory'''
-    #    if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
-    #        return True
-        
-    #def beforeImport(self, filename, module):
-    #    print "before import %s" % module
-
     def afterImport(self, filename, module):
-        #print "after import %s" % module
+        '''Trigger a new suite after each import'''
         self.stopSuite()
         self.startSuite(filename, module)
-
-    #def afterContext(self):
-    #    print "after context"
-
-    #def afterDirectory(self, path):
-    #    print "after dir %s" % path
-
-    #def beforeContext(self):
-    #    print "before context"
-
-    #def beforeDirectory(self, path):
-    #    print "before dir %s" % path
-
-    def beforeTest(self, test):
-        print "before test %s" % str(test)
-
-    def afterTest(self, test):
-        print "after test %s" % str(test)
-
-    def startTest(self, test):
-        '''Define the operations to perform when starting a test'''
-        #print "startTest"
-        self.start = time.time()
-        #if self.isSuiteBegin(test):
-        #    self.stopSuite()
-        #    self.startSuite(test)
 
     def startSuite(self, filename, module):
         '''Start a new suite'''
@@ -400,15 +358,9 @@ class NoseXUnit(Plugin, object):
         self.stderr.start()
         self.stdout.start()
 
-    #def isSuiteBegin(self, test):
-    #    '''Return True if this is a new suite which begins'''
-    #    print "isSuiteBegin"
-    #    if self.suite == None:
-    #        return True
-    #    elif isinstance(test, unittest.TestCase):
-    #        return False
-    #    else:
-    #        return self.suite.elmt != test
+    def startTest(self, test):
+        '''Record starting time'''
+        self.start = time.time()
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
         '''Add a new test result in the current suite'''
@@ -416,22 +368,17 @@ class NoseXUnit(Plugin, object):
         elmt.setStart(self.start)
         elmt.stop()
         self.suite.addTest(elmt)
-    
-    def addDeprecated(self, test):
-        '''Add a deprecated test'''
-        self.addTestCase(DEPRECATED, test)
 
     def addError(self, test, err, capt):
         '''Add a error test'''
-        self.addTestCase(ERROR, test, err=err, capt=capt)
+        kind = ERROR
+        if isinstance(test, nose.SkipTest): kind = SKIP
+        elif isinstance(test, nose.DeprecatedTest): kind = DEPRECATED
+        self.addTestCase(kind, test, err=err, capt=capt)
 
     def addFailure(self, test, err, capt, tb_info):
         '''Add a failure test'''
         self.addTestCase(FAIL, test, err=err, capt=capt, tb_info=tb_info)
-
-    def addSkip(self, test):
-        '''Add a skipped test'''
-        self.addTestCase(SKIP, test)
 
     def addSuccess(self, test, capt):
         '''Add a successful test'''
@@ -453,17 +400,5 @@ class NoseXUnit(Plugin, object):
         self.stopSuite()
         self.stderr.end()
         self.stdout.end()
-
-
-#def getSuiteName(test):
-#    '''Return the name of the suite for the given test'''
-#    if isinstance(test, unittest.TestCase):
-#        return "%s.%s" % (test.__module__, test.__class__.__name__)
-#    elif isinstance(test, nose.suite.TestClass):
-#        return "%s.%s" % (test.cls.__module__, test.cls.__name__)
-#    elif isinstance(test, nose.suite.TestModule):
-#        return test.moduleName
-#    elif isinstance(test, nose.suite.TestDir):
-#        return test.module
 
  
