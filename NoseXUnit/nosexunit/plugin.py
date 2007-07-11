@@ -354,6 +354,7 @@ class NoseXUnit(Plugin, object):
         '''Check that suite exists. If not exists, create a new one'''
         if self.module != test.__module__:
             self.module = test.__module__
+            self.stopSuite()
             self.startSuite(self.module)
 
     def startSuite(self, module):
@@ -367,6 +368,7 @@ class NoseXUnit(Plugin, object):
    
     def startTest(self, test):
         '''Record starting time'''
+        self.enableSuite(test)
         self.start = time.time()
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
