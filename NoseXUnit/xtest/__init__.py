@@ -97,12 +97,19 @@ class MockTestCase(unittest.TestCase):
         '''Return the id of the test'''
         return "%s.%s.%s" % (self.module, self.cls, self.meth)
 
+class Options:
+    '''Mock options'''
+
+    def __init__(self, where):
+        self.where = where
+
 class Conf:
     '''Configuration file'''
     
     def __init__(self, where):
         '''Init the where clause'''
-        self.where = where   
+        self.where = ()
+        self.options = Options(where)
 
 class Plugin:
     '''Class of mock for the Plugin module'''

@@ -306,6 +306,9 @@ class NoseXUnit(Plugin, object):
         '''Configure the plugin'''
         Plugin.configure(self, options, config)
         self.conf = config
+        self.where = []
+        for path in self.conf.options.where:
+            self.where.append(os.path.abspath(os.path.normpath(path)))
         self.repfld = os.path.abspath(options.report)
         if options.src != None: self.src = os.path.abspath(options.src)
         else: self.src = None
@@ -346,7 +349,13 @@ class NoseXUnit(Plugin, object):
 
     def wantDirectory(self, dirname):
         '''Define the wanted directory'''
-        if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
+        if self.where != []:
+            in_tree = False
+            for path in self.where:
+                if os.path.abspath(os.path.normpath(dirname)).startswith(path):
+                    in_tree = True
+        else: in_tree = True
+        if self.wantfld and in_tree and not os.path.exists(os.path.join(dirname, '__init__.py')):
             return True
         else: return
 
