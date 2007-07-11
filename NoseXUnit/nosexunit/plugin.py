@@ -350,6 +350,12 @@ class NoseXUnit(Plugin, object):
             return True
         else: return
 
+    def enableSuite(self, test):
+        '''Check that suite exists. If not exists, create a new one'''
+        if self.module != test.__module__:
+            self.module = test.__module__
+            self.startSuite(self.module)
+
     def startSuite(self, module):
         '''Start a new suite'''
         self.suite = XSuite(module)
@@ -358,20 +364,9 @@ class NoseXUnit(Plugin, object):
         self.stdout.reset()
         self.stderr.start()
         self.stdout.start()
-
-    def afterImport(self, filename, module):
-        '''Trigger a new suite after each import'''
-        self.stopSuite()
-        self.startSuite(module)
-
-    def assertSuite(self, test):
-        '''Check that suite exists. If not exists, create a new one'''
-        if self.suite == None:
-            self.startSuite(test.__module__)
-            
+   
     def startTest(self, test):
         '''Record starting time'''
-        self.assertSuite(test)
         self.start = time.time()
 
     def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
@@ -379,6 +374,7 @@ class NoseXUnit(Plugin, object):
         elmt = XTest(kind, test, err=err, capt=capt, tb_info=tb_info)
         elmt.setStart(self.start)
         elmt.stop()
+        self.enableSuite(test)
         self.suite.addTest(elmt)
 
     def addError(self, test, err, capt):

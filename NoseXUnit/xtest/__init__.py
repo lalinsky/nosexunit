@@ -119,9 +119,6 @@ class Plugin:
     def begin(self):
         pass
 
-    def afterImport(self, filename, module):
-        pass
-
     def startTest(self, test):
         pass
 
