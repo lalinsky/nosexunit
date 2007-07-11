@@ -344,6 +344,12 @@ class NoseXUnit(Plugin, object):
         self.stdout = StdOutRecoder()
         self.stderr = StdErrRecorder()
 
+    def wantDirectory(self, dirname):
+        '''Define the wanted directory'''
+        if self.wantfld and not os.path.exists(os.path.join(dirname, '__init__.py')):
+            return True
+        else: return
+
     def startSuite(self, module):
         '''Start a new suite'''
         self.suite = XSuite(module)
