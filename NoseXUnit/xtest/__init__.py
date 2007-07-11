@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 import os
 import sys
+import new
 import unittest
 import StringIO
 import nose.suite
@@ -52,7 +53,8 @@ class XTestCase(unittest.TestCase):
     def assertWriteOnStreamEquals(self, expected, cls):
         '''Assert that the method writeXmlOnStream of cls write the given output'''
         stream = StringIO.StringIO()
-        cls.writeXmlOnStream(stream)
+        try: cls.writeXmlOnStream(stream, cls.getName())
+        except: cls.writeXmlOnStream(stream)
         output = stream.getvalue()
         stream.close()
         self.assertEquals(expected, output)
@@ -71,7 +73,8 @@ class XTestCase(unittest.TestCase):
     def assertWriteOnStreamContains(self, expected, cls):
         '''Assert that the method writeXmlOnStream of cls write the given output'''
         stream = StringIO.StringIO()
-        cls.writeXmlOnStream(stream)
+        try: cls.writeXmlOnStream(stream, cls.getName())
+        except: cls.writeXmlOnStream(stream)
         output = stream.getvalue()
         stream.close()
         offset = -1
@@ -80,64 +83,46 @@ class XTestCase(unittest.TestCase):
             if res == -1 or res <= offset: raise self.failureException, "Xml doesn't match"
             offset = res
 
-class MockTestModule(nose.suite.TestModule):
-    '''Mock the test suite class'''
-    
-    def __init__(self, moduleName):
-        '''Init the mock'''
-        self.moduleName = moduleName
-    
-    def __eq__(self, obj):
-        '''Equal function for the test suite'''
-        try:
-            return self.moduleName == obj.moduleName
-        except:
-            return False
-    
 class MockTestCase(unittest.TestCase):
     '''Mock the test case class'''
     
-    def __init__(self, testId):
+    def __init__(self, module, cls, meth):
         '''Init the mock'''
-        self.testId = testId
-    
+        self.module = module
+        self.__module__ = self.module
+        self.cls = cls
+        self.meth = meth
+        
     def id(self):
         '''Return the id of the test'''
-        return self.testId
-    
-    def __eq__(self, obj):
-        '''Equal function for the test case'''
-        try:
-            return self.id() == obj.id()
-        except:
-            return False
-        
-def get_err(cls, msg):
-    '''Return the sys.exc_info of the given exception'''
-    try:
-        raise cls(msg)
-    except Exception, e:
-        return sys.exc_info()
-
+        return "%s.%s.%s" % (self.module, self.cls, self.meth)
 
 class Conf:
     '''Configuration file'''
     
     def __init__(self, where):
         '''Init the where clause'''
-        self.where = where
-        
+        self.where = where   
 
 class Plugin:
     '''Class of mock for the Plugin module'''
 
-    def add_options(self, parser, env=os.environ):
+    def help(self):
         pass
 
+    def options(self, parser, env=os.environ):
+        pass
+        
     def configure(self, options, config):
         pass
 
-    def addDeprecated(self, test):
+    def begin(self):
+        pass
+
+    def afterImport(self, filename, module):
+        pass
+
+    def startTest(self, test):
         pass
 
     def addError(self, test, err, capt):
@@ -146,59 +131,23 @@ class Plugin:
     def addFailure(self, test, err, capt, tb_info):
         pass
 
-    def addSkip(self, test):
-        pass        
-
     def addSuccess(self, test, capt):
-        pass        
-            
-    def begin(self):
         pass
 
     def finalize(self, result):
         pass
-    
-    #def loadTestsFromModule(self, module):
-    
-    #def loadTestsFromName(self, name, module=None, importPath=None):
 
-    #def loadTestsFromPath(self, path, module=None, importPath=None):
-    
-    #def loadTestsFromTestCase(self, cls):
-    
-    #def prepareTest(self, test):
-    
-    #def report(self, stream):
 
-    #def setOutputStream(self, stream):
-
-    def startTest(self, test):
-        pass
-    
-    def stopTest(self, test):
-        pass
-
-    def wantClass(self, cls):
-        pass
-    
-    def wantDirectory(self, dirname):
-        pass
-    
-    def wantFile(self, file, package=None):
-        pass
-    
-    def wantFunction(self, function):
-        pass
-    
-    def wantMethod(self, method):
-        pass
-    
-    def wantModule(self, module):
-        pass
-    
-    def wantModuleTests(self, module):
-        pass
-
+def get_mock_test_case(module, cls_name, meth):
+    '''Retun a mock test case'''
+    return new.classobj(cls_name, (MockTestCase,), {})(module, cls_name, meth)
+        
+def get_err(cls, msg):
+    '''Return the sys.exc_info of the given exception'''
+    try:
+        raise cls(msg)
+    except Exception, e:
+        return sys.exc_info()
 
 def main():
     unittest.main()

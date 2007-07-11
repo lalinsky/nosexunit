@@ -2,16 +2,10 @@
 import xtest.unit
 
 class TestXMock(xtest.XTestCase):
-    
-    def testTestModuleModuleName(self):
-        moduleName = 'my_module'
-        suite = xtest.MockTestModule(moduleName)
-        self.assertEquals(moduleName, suite.moduleName)
 
     def testTestCaseTestId(self):
-        testMethodId = 'my_module.my_class.my_method'
-        test = xtest.MockTestCase(testMethodId)
-        self.assertEquals(testMethodId, test.id())
+        test = xtest.get_mock_test_case('my_module', 'my_class', 'my_method')
+        self.assertEquals('my_module.my_class.my_method', test.id())
 
 
 if __name__=="__main__":

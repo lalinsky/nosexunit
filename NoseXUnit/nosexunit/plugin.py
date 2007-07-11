@@ -294,9 +294,8 @@ class NoseXUnit(Plugin, object):
         '''Help'''
         return "Output XML report of test status"
 
-    def add_options(self, parser, env=os.environ):
+    def options(self, parser, env=os.environ):
         '''Add lauch options for nosexunit'''
-        Plugin.add_options(self, parser, env)
         parser.add_option("--xml-report-folder", action="store", default="target/xml-report", dest="report", help="Folder to output XML report to (default is target/xml-report).")
         parser.add_option("--source-folder", action="store", default=None, dest="src", help="Set the python's source folder, and add it in the path (optional).")
         parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path if they don't contain __init__.py file. Works only if --source-folder is defined.")
@@ -338,15 +337,11 @@ class NoseXUnit(Plugin, object):
     def begin(self):
         '''Initialize the plugin'''
         self.initialize()
+        self.module = None
         self.suite = None
         self.start = None
         self.stdout = StdOutRecoder()
         self.stderr = StdErrRecorder()
-
-    def afterImport(self, filename, module):
-        '''Trigger a new suite after each import'''
-        self.stopSuite()
-        self.startSuite(module)
 
     def startSuite(self, module):
         '''Start a new suite'''
@@ -357,11 +352,16 @@ class NoseXUnit(Plugin, object):
         self.stderr.start()
         self.stdout.start()
 
+    def afterImport(self, filename, module):
+        '''Trigger a new suite after each import'''
+        self.stopSuite()
+        self.startSuite(module)
+
     def assertSuite(self, test):
         '''Check that suite exists. If not exists, create a new one'''
         if self.suite == None:
             self.startSuite(test.__module__)
-
+            
     def startTest(self, test):
         '''Record starting time'''
         self.assertSuite(test)

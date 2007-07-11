@@ -29,7 +29,7 @@ class TestNoseXUnit(xtest.XTestCase):
 
     def getOptions(self, cls, argv=[]):
         parser = self.getParser()
-        cls.add_options(parser)
+        cls.options(parser)
         return parser.parse_args(argv)[0]
     
     def getConf(self, where):
@@ -139,28 +139,12 @@ class TestNoseXUnit(xtest.XTestCase):
         plug.begin()
         self.assertEquals([], os.listdir(self.report))
 
-    #def testErrorWhenNoInitMoreThanOne(self):
-    #    plug = self.getPluginWithWorkspace(False, tsts=['toto', 'tata'])
-    #    plug.begin()
-    #    rpath = os.path.join(self.report, 'TEST-NoseXUnitInitSuite.xml')
-    #    self.assertTrue(os.path.isfile(rpath))
-    #    expected = ["""<?xml version="1.0" encoding="UTF-8"?><testsuite name="NoseXUnitInitSuite" tests="2" errors="2" failures="0" time="0.000"><testcase classname="NoseXUnitPlugin" name=""",
-    #                """time="0.000"><error type="plugin.XUnitException">Traceback (most recent call last)""",
-    #                """</error></testcase><testcase classname="NoseXUnitPlugin" name=""",
-    #                """time="0.000"><error type="plugin.XUnitException">Traceback (most recent call last)""",
-    #                """</error></testcase><system-out><![CDATA[]]></system-out><system-err><![CDATA[]]></system-err></testsuite>""", ]
-    #    self.assertWriteXmlContains(expected, rpath)
-
     def testScenarioOneSuccessSuite(self):
         plug = self.getPluginWithWorkspace(False)
-        suite = xtest.MockTestModule('my_module')
-        test = xtest.MockTestCase('my_module.my_class.my_method')
+        test = xtest.get_mock_test_case('my_module', 'my_class', 'my_method')
         plug.begin()
-        plug.startTest(suite)
         plug.startTest(test)
         plug.addSuccess(test, '')
-        plug.stopTest(test)
-        plug.stopTest(suite)
         plug.finalize(None)
         rpath = os.path.join(self.report, 'TEST-my_module.xml')
         self.assertTrue(os.path.isfile(rpath))
