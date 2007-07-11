@@ -296,6 +296,7 @@ class NoseXUnit(Plugin, object):
 
     def options(self, parser, env=os.environ):
         '''Add lauch options for nosexunit'''
+        Plugin.options(self, parser, env)
         parser.add_option("--xml-report-folder", action="store", default="target/xml-report", dest="report", help="Folder to output XML report to (default is target/xml-report).")
         parser.add_option("--source-folder", action="store", default=None, dest="src", help="Set the python's source folder, and add it in the path (optional).")
         parser.add_option("--recursive", action="store_true", default=False, dest="recursive", help="Walk in the source folder to add deeper folders in the path if they don't contain __init__.py file. Works only if --source-folder is defined.")
