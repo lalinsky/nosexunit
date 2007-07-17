@@ -111,8 +111,8 @@
   </head>
   <body>
     <div id="menu">
-      <h2><a href="https://sourceforge.net/projects/nosexunit/">Download</a></h2>
-      <p>Current version: 0.1.0</p>
+      <h2><a href="https://sourceforge.net/project/showfiles.php?group_id=192367">Download</a></h2>
+      <p>Current version: 0.2.0a1</p>
    
       <h2><a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit on Sourceforge</a></h2>
       <p>Report bugs, request features, browse source...</p>
@@ -144,8 +144,7 @@
       
       <div id="news">
         <h2>News</h2>
-        <p>This is the first version of NoseXUnit. Don't hesitate to report bugs and request
-        features on <a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit Sourceforge Page</a>.</p>
+        <p>NoseXUnit is now compatible with Nose 0.10.0a1. Be careful, Nose 0.10.0a1 is a brand new version and is still buggy (See <a href="http://code.google.com/p/python-nose/issues/list">here</a>).</p>
       </div>
 
       <h2>Backgroud</h2>
@@ -185,12 +184,12 @@
       <p>If nose is already installed but too old, you may see an
         error like this:
         <blockquote>
-          <tt>The required version of nose (>=0.9.1) is not available, and
+          <tt>The required version of nose (==0.10.0a1) is not available, and
           can't be installed while this script is running. Please install
           a more recent version first.</tt>
         </blockquote>
         In that case, you'll need to update your nose install first by running:
-        <pre>python ez_setup.py -U nose</pre>
+        <pre>python ez_setup.py -U nose==0.10.0a1</pre>
       </p>
 
       <h2>Nose Usage</h2>
@@ -218,6 +217,12 @@
       requests <a href="https://sourceforge.net/projects/nosexunit/">here</a>.</p>
       
       <h2><a name="changelog"></a>Changelog</h2>
+     
+      <p>0.2.0a1</p>
+      <ul class="simple">
+        <li>Compatibility with nose 0.10.0a1</li>
+        <li>Create an XML output for each test module</li>
+      </ul>
        
       <p>0.1.0</p>
       <ul class="simple">

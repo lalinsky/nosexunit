@@ -1,11 +1,11 @@
 #-*- coding: utf-8 -*-
 from ez_setup import use_setuptools
 use_setuptools()
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="NoseXUnit",
-    version="0.2.0",
+    version="0.2.0a1",
     description="XML Output plugin for Nose",
     long_description="A plugin for nose/nosetests that produces an XML report of the result of a test.",
     author="Olivier Mansion",
@@ -21,7 +21,7 @@ setup(
         'Translations: English',
         'User Interface: Plugins',
         ],
-    install_requires = [ "nose >= 0.10.0a1", ],
+    install_requires = [ "nose == 0.10.0a1", ],
     entry_points = {'nose.plugins': [ 'nosexunit = nosexunit.plugin:NoseXUnit' ] },
     test_suite = 'nose.collector',
 )
