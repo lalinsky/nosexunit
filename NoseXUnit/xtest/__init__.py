@@ -142,7 +142,7 @@ class Plugin:
         pass
 
 
-def get_mock_test_case(module, cls_name, meth):
+def get_mock_case(module, cls_name, meth):
     '''Retun a mock test case'''
     return new.classobj(cls_name, (MockTestCase,), {})(module, cls_name, meth)
         

@@ -9,16 +9,16 @@ class TestXSuite(xtest.XTestCase):
 
     def getSuite(self):
         suite = plugin.XSuite('my_module')
-        elmt1 = xtest.get_mock_test_case('my_module', 'my_class', 'my_test1')
+        elmt1 = xtest.get_mock_case('my_module', 'my_class', 'my_test1')
         test1 = plugin.XTest(plugin.SUCCESS, elmt1)
         suite.addTest(test1)
-        elmt2 = xtest.get_mock_test_case('my_module', 'my_class', 'my_test2')
+        elmt2 = xtest.get_mock_case('my_module', 'my_class', 'my_test2')
         test2 = plugin.XTest(plugin.SUCCESS, elmt2)
         suite.addTest(test2)
-        elmt3 = xtest.get_mock_test_case('my_module', 'my_class', 'my_test3')
+        elmt3 = xtest.get_mock_case('my_module', 'my_class', 'my_test3')
         test3 = plugin.XTest(plugin.FAIL, elmt3, xtest.get_err(StandardError, "StandardError raised"))
         suite.addTest(test3)
-        elmt4 = xtest.get_mock_test_case('my_module', 'my_class', 'my_test4')
+        elmt4 = xtest.get_mock_case('my_module', 'my_class', 'my_test4')
         test4 = plugin.XTest(plugin.ERROR, elmt4, xtest.get_err(StandardError, "StandardError2 raised"))
         suite.addTest(test4)  
         return suite
@@ -33,7 +33,7 @@ class TestXSuite(xtest.XTestCase):
         
     def testAddTest(self):
         suite = plugin.XSuite('my_module')
-        elmt = xtest.get_mock_test_case('my_module', 'my_class', 'my_test')
+        elmt = xtest.get_mock_case('my_module', 'my_class', 'my_test')
         test = plugin.XTest(plugin.SUCCESS, elmt)
         suite.addTest(test)
         self.assertEquals(1, len(suite.tests))

@@ -141,7 +141,7 @@ class TestNoseXUnit(xtest.XTestCase):
 
     def testScenarioOneSuccessSuite(self):
         plug = self.getPluginWithWorkspace(False)
-        test = xtest.get_mock_test_case('my_module', 'my_class', 'my_method')
+        test = xtest.get_mock_case('my_module', 'my_class', 'my_method')
         plug.begin()
         plug.startTest(test)
         plug.addSuccess(test)

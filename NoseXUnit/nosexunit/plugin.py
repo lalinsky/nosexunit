@@ -257,7 +257,7 @@ class XTest(XTestElmt):
 
     def getClass(self):
         '''Return the class name'''
-        return "%s.%s" % (self.elmt.__module__, self.elmt.__class__.__name__)
+        return '.'.join(self.elmt.id().split('.')[:-1])
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
@@ -350,8 +350,9 @@ class NoseXUnit(Plugin, object):
 
     def enableSuite(self, test):
         '''Check that suite exists. If not exists, create a new one'''
-        if self.module != test.__module__:
-            self.module = test.__module__
+        current = '.'.join(test.id().split('.')[:-2])
+        if self.module != current:
+            self.module = current
             self.stopSuite()
             self.startSuite(self.module)
 
