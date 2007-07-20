@@ -144,7 +144,7 @@ class TestNoseXUnit(xtest.XTestCase):
         test = xtest.get_mock_test_case('my_module', 'my_class', 'my_method')
         plug.begin()
         plug.startTest(test)
-        plug.addSuccess(test, '')
+        plug.addSuccess(test)
         plug.finalize(None)
         rpath = os.path.join(self.report, 'TEST-my_module.xml')
         self.assertTrue(os.path.isfile(rpath))

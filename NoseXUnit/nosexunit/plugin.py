@@ -240,14 +240,12 @@ class XSuite(XTestElmt):
 class XTest(XTestElmt):
     '''Class for the test notion'''
 
-    def __init__(self, kind, elmt, err=None, capt=None, tb_info=None):
+    def __init__(self, kind, elmt, err=None):
         '''Init the test result'''
         XTestElmt.__init__(self)
         self.elmt = elmt
         self.kind = kind
         self.err = err
-        self.capt = capt
-        self.tb_info = tb_info
 
     def getKind(self):
         '''Return the kind of text'''
@@ -371,28 +369,28 @@ class NoseXUnit(Plugin, object):
         self.enableSuite(test)
         self.start = time.time()
 
-    def addTestCase(self, kind, test, err=None, capt=None, tb_info=None):
+    def addTestCase(self, kind, test, err=None):
         '''Add a new test result in the current suite'''
-        elmt = XTest(kind, test, err=err, capt=capt, tb_info=tb_info)
+        elmt = XTest(kind, test, err=err)
         elmt.setStart(self.start)
         elmt.stop()
         self.enableSuite(test)
         self.suite.addTest(elmt)
 
-    def addError(self, test, err, capt):
+    def addError(self, test, err):
         '''Add a error test'''
         kind = ERROR
         if isinstance(test, nose.SkipTest): kind = SKIP
         elif isinstance(test, nose.DeprecatedTest): kind = DEPRECATED
-        self.addTestCase(kind, test, err=err, capt=capt)
+        self.addTestCase(kind, test, err=err)
 
-    def addFailure(self, test, err, capt, tb_info):
+    def addFailure(self, test, err):
         '''Add a failure test'''
-        self.addTestCase(FAIL, test, err=err, capt=capt, tb_info=tb_info)
+        self.addTestCase(FAIL, test, err=err)
 
-    def addSuccess(self, test, capt):
+    def addSuccess(self, test):
         '''Add a successful test'''
-        self.addTestCase(SUCCESS, test, capt=capt)
+        self.addTestCase(SUCCESS, test)
 
     def stopSuite(self):
         '''Stop the current suite'''
