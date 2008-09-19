@@ -1,11 +1,21 @@
 #-*- coding: utf-8 -*-
-from ez_setup import use_setuptools
-use_setuptools()
-from setuptools import setup
+import sys
+import distutils.util
+
+if sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 5):
+    from ez_setup import use_setuptools
+    use_setuptools()
+    from setuptools import setup
+else:
+    import warnings
+    warnings.warn('setuptools not used')
+    from distutils.core import setup
+
+execfile(distutils.util.convert_path('nosexunit/__init__.py'))
 
 setup(
     name = "NoseXUnit",
-    version = "0.2.0c2",
+    version = __version__,
     description = "XML Output plugin for Nose",
     long_description = "A plugin for nose/nosetests that produces an XML report of the result of a test.",
     author = "Olivier Mansion",
