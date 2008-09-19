@@ -1,7 +1,6 @@
 #-*- coding: utf-8 -*-
 import os
 import sys
-import uuid
 import time
 import traceback
 import nose.suite
@@ -416,5 +415,11 @@ def get_test_id(test):
     # Try to call the id
     try: return test.id()
     # Failed to get it ! Get an unique test entry
-    except: return 'nose.nose.%s' % uuid.uuid1()
+    except:
+        # Get the default base
+        entry = 'nose.nose'
+        # Check if UUID is available
+        try: return '%s.%s' % (entry, __import__('uuid').uuid1())
+        # Else use id(...)
+        except: return '%s.%s' % (entry, id(test))
  
