@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name = "NoseXUnit",
-    version = "0.2.0c1",
+    version = "0.2.0c2",
     description = "XML Output plugin for Nose",
     long_description = "A plugin for nose/nosetests that produces an XML report of the result of a test.",
     author = "Olivier Mansion",
@@ -23,7 +23,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Testing',
         ],
-    install_requires = ['nose >= 0.10.0a2', ],
+    install_requires = ['nose >= 0.10.3', ],
     entry_points = {'nose.plugins.0.10': [ 'nosexunit = nosexunit.plugin:NoseXUnit' ] },
     test_suite = 'nose.collector',
 )

@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 import os
 import sys
+import uuid
 import time
 import traceback
 import nose.suite
@@ -253,11 +254,11 @@ class XTest(XTestElmt):
 
     def getName(self):
         '''Return the name of the method'''
-        return self.elmt.id().split('.')[-1]
+        return get_test_id(self.elmt).split('.')[-1]
 
     def getClass(self):
         '''Return the class name'''
-        return '.'.join(self.elmt.id().split('.')[:-1])
+        return '.'.join(get_test_id(self.elmt).split('.')[:-1])
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
@@ -350,7 +351,7 @@ class NoseXUnit(Plugin, object):
 
     def enableSuite(self, test):
         '''Check that suite exists. If not exists, create a new one'''
-        current = '.'.join(test.id().split('.')[:-2])
+        current = '.'.join(get_test_id(test).split('.')[:-2])
         if self.module != current:
             self.module = current
             self.stopSuite()
@@ -410,4 +411,10 @@ class NoseXUnit(Plugin, object):
         self.stderr.end()
         self.stdout.end()
 
+def get_test_id(test):
+    '''Get the ID of the provided test'''
+    # Try to call the id
+    try: return test.id()
+    # Failed to get it ! Get an unique test entry
+    except: return 'nose.nose.%s' % uuid.uuid1()
  
