@@ -253,11 +253,11 @@ class XTest(XTestElmt):
 
     def getName(self):
         '''Return the name of the method'''
-        return get_test_id(self.elmt).split('.')[-1]
+        return '.'.join(get_test_id(self.elmt).split('.')[2:])
 
     def getClass(self):
         '''Return the class name'''
-        return '.'.join(get_test_id(self.elmt).split('.')[:-1])
+        return '.'.join(get_test_id(self.elmt).split('.')[:2])
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
@@ -274,7 +274,7 @@ class XTest(XTestElmt):
     def writeXmlOnStream(self, stream):
         '''Write the xml result on the stream'''
         if self.kind in [SUCCESS, FAIL, ERROR, ]:
-            stream.write('<testcase classname="%s' % self.getClass() + '" name="%s' % self.getName() + '"' + ' time="%.3f"' % self.getTime())
+            stream.write('<testcase classname="%s" name="%s" time="%.3f"' % (self.getClass(), self.getName(), self.getTime()))
             if self.kind == SUCCESS: stream.write('/>')
             else:
                 stream.write('>')
@@ -350,7 +350,7 @@ class NoseXUnit(Plugin, object):
 
     def enableSuite(self, test):
         '''Check that suite exists. If not exists, create a new one'''
-        current = '.'.join(get_test_id(test).split('.')[:-2])
+        current = get_test_id(test).split('.')[0]
         if self.module != current:
             self.module = current
             self.stopSuite()
