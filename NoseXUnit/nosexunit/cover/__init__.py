@@ -35,6 +35,8 @@ class Source(object):
         self.i_err = err
         # Get the complexity
         self.i_cyclo = None
+        # Store the total lines number
+        self.i_lines = 0
         
     def full(self):
         '''Get the description'''
@@ -76,10 +78,18 @@ class Source(object):
         # Failed to do it
         except: logger.error('failed to cyclonize %s' % self.full())
 
+    def linize(self, lines):
+        '''Store the code lines'''
+        self.i_lines = lines
+
     def cyclo(self):
         '''Get the complexity'''
         if self.i_cyclo is None: return 0
         else: return self.i_cyclo
+
+    def lines(self):
+        '''Get the line of code'''
+        return self.i_lines
 
     def __str__(self):
         '''String representation'''
@@ -104,6 +114,10 @@ class Sources(list):
     def cyclo(self):
         '''Get the complexity'''
         return max([ source.cyclo() for source in self ])
+    
+    def lines(self):
+        '''Get the line number'''
+        return sum([ source.lines() for source in self ])
 
 def report(target, sources):
     '''Create report'''
@@ -152,6 +166,8 @@ def report(target, sources):
                 lines = ntools.highlight(text)
                 # Get complexity
                 entity.cyclonize(text)
+                # Set lines
+                entity.linize(len(content))
                 # Fill data in case of file without content
                 while len(data) < len(lines): data.append(' ')
                 # Process the code
