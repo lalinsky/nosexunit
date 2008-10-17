@@ -1,13 +1,17 @@
 #-*- coding: utf-8 -*-
 import os
+import time
 import shutil
 import logging
 import datetime
+import compiler
 import StringIO
 import traceback
 
+import nosexunit
 import nosexunit.const as nconst
 import nosexunit.tools as ntools
+import nosexunit.cyclo as ncyclo
 
 # Get a logger
 logger =  logging.getLogger('%s.%s' % (nconst.LOGGER, __name__))
@@ -29,6 +33,8 @@ class Source(object):
         self.i_exe = exe
         # Store the error
         self.i_err = err
+        # Get the complexity
+        self.i_cyclo = None
         
     def full(self):
         '''Get the description'''
@@ -55,6 +61,26 @@ class Source(object):
         try: return 100 * float(self.exe()) / self.all()
         except ZeroDivisionError: return 100
 
+    def cyclonize(self, content):
+        '''Get the complexity'''
+        # Try to get
+        try:
+            # Get the AST
+            ast = compiler.parse('%s\n\n' % content)
+            # Get the visitor
+            visitor = ncyclo.PathGraphingAstVisitor()
+            # Go threw
+            visitor.preorder(ast, visitor)
+            # Store the complexity
+            self.i_cyclo = max([ graph.complexity() for graph in visitor.graphs.values() ])
+        # Failed to do it
+        except: logger.error('failed to cyclonize %s' % self.full())
+
+    def cyclo(self):
+        '''Get the complexity'''
+        if self.i_cyclo is None: return 0
+        else: return self.i_cyclo
+
     def __str__(self):
         '''String representation'''
         return self.full()
@@ -74,6 +100,10 @@ class Sources(list):
     def exe(self):
         '''Get the global number of executed statements'''
         return sum([ source.exe() for source in self ])
+    
+    def cyclo(self):
+        '''Get the complexity'''
+        return max([ source.cyclo() for source in self ])
 
 def report(target, sources):
     '''Create report'''
@@ -91,7 +121,7 @@ def report(target, sources):
     cls = {'>': 'covered',
            '!': 'uncovered',
            '-': 'skipped',
-           ' ': 'no', }    
+           ' ': 'no', }
     # Go threw the sources
     for entity in sources:
         # Try to process the package
@@ -116,8 +146,12 @@ def report(target, sources):
                     if line[2:] == '': content.append(' ')
                     # Else add the content
                     else: content.append(line[2:])
+                # Get the text
+                text = '%s' % ('\n'.join(content), )
                 # Get the highlighted lines
-                lines = ntools.highlight('%s' % ('\n'.join(content), ))
+                lines = ntools.highlight(text)
+                # Get complexity
+                entity.cyclonize(text)
                 # Fill data in case of file without content
                 while len(data) < len(lines): data.append(' ')
                 # Process the code
@@ -130,6 +164,8 @@ def report(target, sources):
                     ntools.kiding(__name__, 'error.html', target, bn='%s-code.html' % entity.full(), entity=entity, error='Failed to highlight source code', date=date)
         # Unable to process the package
         except: logger.error(traceback.format_exc())
+    # Create the COBERTURA and CLOVER reports
+    for fn in ['cobertura.xml', 'clover.xml', ]: ntools.kiding(__name__, fn, target, output='xml', sources=sources, version=nosexunit.__version__, date='%d'%time.mktime(date.timetuple()))
 
 def parse(content):
     '''Parse the report'''

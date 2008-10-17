@@ -54,7 +54,9 @@ setup(
                                         'code.html',
                                         'index.html',
                                         'listing.html',
-                                        'error.html', ], },
+                                        'error.html',
+                                        'cobertura.xml',
+                                        'clover.xml', ], },
     entry_points = {'nose.plugins.0.10': [ 'nosexunit = nosexunit.plugin:NoseXUnit' ] },
     test_suite = 'nose.collector',
 )
