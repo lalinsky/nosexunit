@@ -111,6 +111,12 @@ class NoseXUnit(Plugin, object):
                               default=False,
                               dest='cover_clean',
                               help='Clean previous coverage results (default: no).')
+            # Collect extra coverage files in target folder
+            parser.add_option('--cover-collect',
+                              action='store',
+                              default=False,
+                              dest='cover_collect',
+                              help='Collect other coverage files potentially generated in cover target folder. These extra files should have the following pattern: %s.* (default: no).' % nconst.COVER_OUTPUT_BASE)
         # Log that not available
         else: logger.warn('coverage not available in NoseXUnit, please check dependences')
         
@@ -146,6 +152,8 @@ class NoseXUnit(Plugin, object):
             self.cover = options.cover
             # Check if clean folder
             self.cover_clean = options.cover_clean
+            # Check if collect
+            self.cover_collect = options.cover_collect
             # Store coverage target folder
             self.cover_target = os.path.abspath(options.cover_target)
         # Check if audit and cover enabled
@@ -345,7 +353,7 @@ class NoseXUnit(Plugin, object):
             # Get the package to cover
             entries = [ package for entry, package in sys.modules.items() if self.docover(entry, package) ]
             # Stop coverage
-            ncover.stop(stream, entries, self.cover_target)
+            ncover.stop(stream, entries, self.cover_target, self.cover_collect)
 
     def docover(self, entry, package):
         '''Check if the package as to be covered'''

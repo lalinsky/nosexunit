@@ -276,7 +276,7 @@
   <body>
     <div id="menu">
       <h2><a href="https://sourceforge.net/project/showfiles.php?group_id=192367">Download</a></h2>
-      <p>Current version: 0.3.0c1</p>
+      <p>Current version: 0.3.1</p>
    
       <h2><a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit on Sourceforge</a></h2>
       <p>Report bugs, request features, browse source...</p>
@@ -398,12 +398,20 @@ nosetests --with-nosexunit --source-folder=PATH --enable-cover [options] [(optio
 		<p>You can specify (all optionals):
 		<ul class="simple">
 		  <li>The output folder for report with <i>--cover-target=PATH</i>,
-		  <li>If you want to ignore previous executions for coverage with <i>--cover-clean</i>.
+		  <li>If you want to ignore previous executions for coverage with <i>--cover-clean</i>,
+		  <li>If you want to collect extra coverage files with <i>--cover-collect</i>. These extra coverage files should be generated in the coverage target folder and have the follwing pattern: <i>.coverage.*</i>.
 		</ul>
+		</p>
+		<p>We also generate two extra reports in coverage target folder:
+		<ul class="simple">
+          <li>A Clover style XML report: <i>clover.xml</i>,</li>
+          <li>A Cobertura style XML report: <i>cobertura.xml</i>.</li>
+		</ul>
+		</p>
 		<p>In source code, you can explicitely refuse code coverage with:</p>
 <pre class="literal-block">
 def foo():
-    print "hello"      <i>#pragma: no cover</i>
+    print "hello"      <i># pragma: no cover</i>
 </pre>
 	  </div>
 
@@ -441,6 +449,11 @@ def foo():
                         Output folder for coverage reports (default is
                         target/NoseXUnit/cover).
   --cover-clean=COVER_CLEAN
+                        Clean previous coverage results (default: no).
+  --cover-collect=COVER_COLLECT
+                        Collect other coverage files potentially generated in
+                        cover target folder. These extra files should have the
+                        following pattern: .coverage.* (default: no).
 </pre>
       
       <h2>Bug reports</h2>
@@ -449,6 +462,13 @@ def foo():
       requests <a href="http://sourceforge.net/tracker2/?group_id=192367">here</a>.</p>
       
       <h2><a name="changelog"></a>Changelog</h2>
+
+      <p>0.3.1</p>
+      <ul class="simple">
+        <li>Generate a Clover style XML report,</li>
+        <li>Generate a Cobertura style XML report,</li>
+        <li>Add <i>--cover-collect</i> to collect extra coverage file.</li>
+      </ul>
 
       <p>0.3.0c1</p>
       <ul class="simple">

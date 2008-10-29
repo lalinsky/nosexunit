@@ -72,3 +72,6 @@ AUDIT_DEFAULT_REPORTER = 'nosexunit'
 
 # Exclude from audit and cover
 AUDIT_COVER_EXCLUDE = ['ez_setup', 'setup', ]
+
+# Get default coverage output file
+COVER_OUTPUT_BASE = '.coverage'

@@ -54,7 +54,7 @@ def packages(root, search=False, exclude=nconst.SEARCH_EXCLUDE):
     # Check that source folder is not in a package
     if os.path.exists(os.path.join(root, nconst.INIT)):
         # The root package can't be a part of a package
-        raise nexcepts.ToolError('following folder can not contain %s file' % nconst.INIT)
+        raise nexcepts.ToolError('following folder can not contain %s file: %s' % (nconst.INIT, root))
     # Go threw the folders
     for folder, folders, files in os.walk(root):
         # Filter on pattern

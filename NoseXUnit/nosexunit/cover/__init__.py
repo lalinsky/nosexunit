@@ -238,11 +238,9 @@ def available():
 def start(clean, packages, target):
     '''Start the coverage'''
     # Set the coverage data storing path
-    os.environ['COVERAGE_FILE'] = os.path.join(target, 'cover.')
+    os.environ['COVERAGE_FILE'] = os.path.join(target, nconst.COVER_OUTPUT_BASE)
     # Check if clean
-    if clean: coverage.erase()
-    # Set no cover
-    coverage.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
+    if clean: ntools.clean(target, nconst.COVER_OUTPUT_BASE)
     # Start
     coverage.start()
     # Load packages
@@ -252,10 +250,12 @@ def start(clean, packages, target):
         # Unable to get it, don't care
         except: pass
 
-def stop(stream, packages, target):
+def stop(stream, packages, target, collect=False):
     '''Stop coverage'''
     # Call stop
     coverage.stop()
+    # Collect if asked
+    if collect: coverage.the_coverage.collect()
     # Get the file descriptor for the report
     fd = StringIO.StringIO()
     # Get the report
@@ -265,7 +265,7 @@ def stop(stream, packages, target):
     # Write on stream
     stream.write(fd.getvalue())
     # Write in target
-    ntools.save(fd.getvalue(), os.path.join(target, 'cover.dat'), binary=False)
+    ntools.save(fd.getvalue(), os.path.join(target, 'coverage.dat'), binary=False)
     # Get the sources
     sources = parse(fd.getvalue())
     # Close the file descriptor
