@@ -107,13 +107,13 @@ class NoseXUnit(Plugin, object):
                               help='Output folder for coverage reports (default is %s).' % nconst.TARGET_COVER)
             # Check if clean folder
             parser.add_option('--cover-clean',
-                              action='store',
+                              action='store_true',
                               default=False,
                               dest='cover_clean',
                               help='Clean previous coverage results (default: no).')
             # Collect extra coverage files in target folder
             parser.add_option('--cover-collect',
-                              action='store',
+                              action='store_true',
                               default=False,
                               dest='cover_collect',
                               help='Collect other coverage files potentially generated in cover target folder. These extra files should have the following pattern: %s.* (default: no).' % nconst.COVER_OUTPUT_BASE)
