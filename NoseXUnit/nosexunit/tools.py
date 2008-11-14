@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 import os
+import pickle
 import logging
 import pkg_resources
 
@@ -256,3 +257,29 @@ def highlight(content):
     formatter = HPyF()
     # Highlight
     return pygments.highlight(content, lexer, formatter).splitlines()
+
+def exchange(path, data=None):
+    '''
+    Load pickle file if `data` is defined
+    Save data if `data` is not defined
+    '''
+    # Check if save of load
+    if data:
+        # Get the file descriptor
+        fd = open(path, 'wb')
+        # Close the file
+        pickle.dump(data, fd)
+        # Close the file
+        fd.close()
+    # Load here
+    else:
+        # Check that file exists
+        if not os.path.exists(path): raise nexcepts.ToolError("exchange file doesn't exist: %s" % path)
+        # Get the file descriptor
+        fd = open(path, 'rb')
+        # Load data
+        data = pickle.load(fd)
+        # Close the file
+        fd.close()
+        # Return data
+        return data

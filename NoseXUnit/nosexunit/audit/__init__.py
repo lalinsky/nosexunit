@@ -1,10 +1,12 @@
 #-*- coding: utf-8 -*-
 import os
+import sys
 import new
 import logging
 import unittest
 import datetime
 import traceback
+import subprocess
 import ConfigParser
 
 import nosexunit.const as nconst
@@ -173,24 +175,19 @@ class Sources(dict):
         return counter
 
 class AuditReporter(object):
-    '''Reporter for NoseXUnit reports'''
+    '''
+    Reporter for NoseXUnit reports
+    Actually do nothing
+    '''
 
     def __init__(self):
-        # Store the sources packages
-        self.sources = Sources()
+        '''Initialize the reporter'''
         # Useless, only for PyLint
         self.extension = 'audit'
 
     def add_message(self, msg_id, location, msg):
         '''Add an id'''
-        # Get the data from the location
-        path, desc, useless, line = location
-        # Get the source object
-        source = self.sources.get(path, desc)
-        # Create the entry for the data
-        entry = Entry(msg_id, line, msg)
-        # Add it to the source object
-        source.add(entry)
+        pass
     
     def display_results(self, layout):
         '''Display the results'''
@@ -206,39 +203,18 @@ class AuditWrapper(object):
     Wrap the selected PyLint reporter 
     '''
     
-    def __init__(self, output, target):
+    def __init__(self, package, output, target):
         '''Initialize the reporter'''
+        # Store the package
+        self.package = package
         # Set the output
         self.output = output
-        # Get the reporter
-        if self.output not in outputs():
-            # Unable to get the asked reporter
-            raise nexcepts.AuditError('unable to get reporter for %s' % self.output)
         # Set the target folder
         self.target = target
         # Get the test cases
-        self.cases = []
-        # Store the package
-        self.packages = []
-        # Store the test id
-        self.count = None
+        self.errors = []
         # Get the reporter
-        self.reporter = None
-
-    def default(self):
-        '''Return True if AuditReporter is used'''
-        return isinstance(self.reporter, AuditReporter)
-
-    def next(self, package):
-        '''Enable wrapper for next package'''
-        # Set the package
-        self.packages.append(package)
-        # Set the new test case
-        self.cases.append(new.classobj('TestAudit%s' % package.capitalize(), (AuditTestCase, ), {}))
-        # Set the test counter
-        self.count = 1
-        # Create the reporter
-        if not self.default(): self.reporter = create_reporter(self.output)
+        self.reporter = create_reporter(self.output)
 
     def add_message(self, msg_id, location, msg):
         '''
@@ -249,28 +225,16 @@ class AuditWrapper(object):
         # Call reporter
         self.reporter.add_message(msg_id, location, msg)
         # Check if error and add a test
-        if msg_id[0] in ['E', 'F', ]:
-            # Create the test
-            def test(cls):
-                # Get the output
-                output = """%s
-location   : %s
-line:      : %d
-package    : %s
-function   : %s
-description: %s
-""" % (msg_id, location[0], location[3], location[1], location[2], msg)
-                # Actually fail
-                cls.fail(output)
-            # Set to the class
-            setattr(self.cases[-1], 'test_%d' % self.count, test)
-            # Add to counter
-            self.count += 1
+        if msg_id[0] in ['E', 'F', ]: self.errors.append( (msg_id, location, msg) )
 
     def __getattr__(self, name):
         '''Delegate for getters'''
         return getattr(self.reporter, name)
-    
+
+    def default(self):
+        '''Return True if AuditReporter is used'''
+        return isinstance(self.reporter, AuditReporter)
+
     def set_output(self, fd=None):
         '''Override the method to store the files in the target folder'''
         # Check if output specified
@@ -285,28 +249,101 @@ description: %s
         os.remove(bn)
         # Check if default reporter
         if not self.default():
-            # Get the folder
-            folder = os.path.join(self.target, self.packages[-1])
             # Check if target folder exists
-            ntools.create(folder)
+            ntools.create(self.target)
             # Get the file
-            self.reporter.set_output(open(os.path.join(folder, bn), 'w'))
+            self.reporter.set_output(open(os.path.join(self.target, bn), 'w'))
 
     def display_results(self, layout):
         '''Display results'''
         # Call super
         self.reporter.display_results(layout)
 
-def audit(packages, output, target, config=None):
+def audit(source, packages, output, target, config=None):
     '''Start PyLint'''
     # Check PyLint configuration file
     check_pylintrc()
+    # Check output
+    if output not in outputs(): raise nexcepts.AuditError("specified output doesn't exist: %s" % output)
     # Get a wrapper
     wrapper = AuditWrapper(output, target)
+    # Get the exchange path
+    exchange = os.path.join(target, nconst.AUDIT_EXCHANGE_FILE)
+    # Get the context
+    context = os.environ.copy()
+    # Add exchange configuration
+    context[nconst.AUDIT_EXCHANGE_ENTRY] = exchange
     # Go threw the packages
     for package in packages:
         # Set the next package
         wrapper.next(package)
+        # Get the data
+        entries = (package, output, target, config)
+        # Save data
+        ntools.exchange(exchange, entries)
+        # Get line
+        line = [sys.executable, '-c', 'import %s ; %s.external()' % (__name__, __name__) ]
+        # Call subprocess
+        subprocess.Popen(line, cwd=source, env=context).wait()
+        # Get the wrapper
+        wrapper, error = ntools.exchange(exchange)
+        # Check if errors
+        if error is not None:
+            # Log the error
+            logger.error(error)
+            # Step out
+            raise nexcepts.AuditError('failed to audit %s' % package)
+    # Store test cases
+    cases = []
+    # Get sources objects
+    sources = Sources()
+    # Go threw the packages to generate the tests
+    for package in wrapper.cases.keys():
+        # Create the class
+        tcls = new.classobj('TestAudit%s' % package.capitalize(), (AuditTestCase, ), {})
+        # Go threw the tests
+        for i, case in enumerate(wrapper.cases[package]):
+            # Unpack
+            oid, loc, out = case
+            # Get data on location
+            path, desc, useless, line = location
+            # Get the source object
+            source = sources.get(path, desc)
+            # Create the entry for the data
+            entry = Entry(oid, line, out)
+            # Add it to the source object
+            source.add(entry)
+            # Create the test
+            def test(cls):
+                # Get the output
+                output = """%s
+location   : %s
+line:      : %d
+package    : %s
+function   : %s
+description: %s
+""" % (oid, loc[0], loc[3], loc[1], loc[2], out)
+                # Actually fail
+                cls.fail(output)
+            # Set to the class
+            setattr(tcls, 'test_%d' % i+1, test)
+    # Create report
+    report(target, sources)
+    # Return the cases
+    return cases
+
+def external():
+    '''Entry point for the search'''
+    # Initialize wrapper
+    errors = []
+    # Storage path
+    exchange = os.getenv(nconst.AUDIT_EXCHANGE_ENTRY)
+    # Get errors
+    try:
+        # Unload data
+        package, output, target, config = ntools.exchange(exchange)
+        # Get a wrapper
+        wrapper = AuditWrapper(package, output, os.path.join(target, package))
         # Get the arguments
         argv = ['--include-ids=yes', # Set id
                 '--files-output=yes', # Set file output
@@ -318,10 +355,14 @@ def audit(packages, output, target, config=None):
         argv.append(package)
         # Start PyLint
         pylint.lint.Run(argv, wrapper)
-    # Create report
-    report(target, wrapper.reporter.sources)
-    # Return cases
-    return wrapper.cases
+        # Store errors
+        errors = wrapper.errors
+        # Save cases
+        ntools.exchange(exchange, wrapper.errors)
+    # Get error
+    except: ntools.exchange(exchange, (errors, traceback.format_exc()))
+    # No error
+    else: ntools.exchange(exchange, (errors, None))
 
 def report(target, sources):
     '''Create report'''

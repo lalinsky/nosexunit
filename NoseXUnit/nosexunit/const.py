@@ -70,6 +70,12 @@ INIT = '__init__.py'
 # default
 AUDIT_DEFAULT_REPORTER = 'nosexunit'
 
+# Pickle file
+AUDIT_EXCHANGE_FILE = 'exchange.pkl'
+
+# Entry of pickle file in context
+AUDIT_EXCHANGE_ENTRY = 'NOSEXUNIT_EXCHANGE_FILE'
+
 # Exclude from audit and cover
 AUDIT_COVER_EXCLUDE = ['ez_setup', 'setup', ]
 

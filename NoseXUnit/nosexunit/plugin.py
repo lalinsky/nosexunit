@@ -156,8 +156,6 @@ class NoseXUnit(Plugin, object):
             self.cover_collect = options.cover_collect
             # Store coverage target folder
             self.cover_target = os.path.abspath(options.cover_target)
-        # Check if audit and cover enabled
-        if self.audit and self.cover: raise nexcepts.NoseXUnitError("audit and cover options can't be used both")
     
     def initialize(self):
         '''Set the environment'''
@@ -208,7 +206,7 @@ class NoseXUnit(Plugin, object):
             # Get the package list for audit
             self.audit_packages = [ package for package in self.packages.keys() if package.find('.') == -1 and not self.conf.testMatch.search(package) and not package in nconst.AUDIT_COVER_EXCLUDE ]
             # Start audit
-            self.audit_cls = naudit.audit(self.audit_packages, self.audit_output, self.audit_target, self.audit_config)
+            self.audit_cls = naudit.audit(self.source, self.audit_packages, self.audit_output, self.audit_target, self.audit_config)
         # No test class
         else: self.audit_cls = []
         # Check if coverage enabled
