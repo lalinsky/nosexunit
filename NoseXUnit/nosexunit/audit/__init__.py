@@ -225,7 +225,11 @@ class AuditWrapper(object):
         # Call reporter
         self.reporter.add_message(msg_id, location, msg)
         # Check if error and add a test
-        if msg_id[0] in ['E', 'F', ]: self.errors.append( (msg_id, location, msg) )
+        if msg_id[0] in ['E', 'F', ]:
+            # Get the absolute path for location
+            path, desc, useless, line = location
+            # Add errors
+            self.errors.append( (msg_id, (os.path.abspath(path), desc, useless, line), msg) )
 
     def __getattr__(self, name):
         '''Delegate for getters'''
@@ -268,13 +272,13 @@ def audit(source, packages, output, target, config=None):
     # Call PyLint
     listing = client(source, packages, output, target, config=config)
     # Generate sources and test cases
-    sources, cases = generate(listing)
+    sources, cases = generate(source, listing)
     # Create report
     report(target, sources)
     # Return the cases
     return cases
 
-def generate(listing):
+def generate(source, listing):
     '''Generate source objects and test cases'''
     # Get sources objects
     sources = Sources()

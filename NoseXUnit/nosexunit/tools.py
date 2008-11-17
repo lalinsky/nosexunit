@@ -193,9 +193,9 @@ def get_test_id(test):
 def identical(file1, file2):
     '''Return True if it is the same file'''
     # Check if on UNIX
-    if on_posix(): return os.path.samefile(file1, file2)
+    try: return os.path.samefile(file1, file2)
     # On Win32
-    else: return os.path.normpath(file1) == os.path.normpath(file2)
+    except: return os.path.normpath(file1) == os.path.normpath(file2)
 
 def on_posix():
     '''Return True if run on POSIX platform'''
