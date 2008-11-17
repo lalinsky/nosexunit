@@ -54,7 +54,25 @@ class NoseXUnit(Plugin, object):
                           action='store_true',
                           default=False,
                           dest='search_test',
-                          help="Search tests in folders with no __init__.py file (default does nothing).")
+                          help='Search tests in folders with no __init__.py file (default: do nothing).')
+        # Package to process in audit or coverage extensions
+        parser.add_option('--extra-include',
+                          action='append',
+                          default=[],
+                          dest='extra_include',
+                          help='Include packages for audit or coverage processing (default: take all packages in --source-folder, except those defined in --extra-exclude).')
+        # Package to do not process in audit or coverage extensions
+        parser.add_option('--extra-exclude',
+                          action='append',
+                          default=nconst.AUDIT_COVER_EXCLUDE,
+                          dest='extra_exclude',
+                          help='Exclude packages for audit or coverage processing (default: %s). Useless if --extra-include defined.' % (', '.join(nconst.AUDIT_COVER_EXCLUDE), ))
+        # Package to do not process in audit or coverage extensions
+        parser.add_option('--extra-test-process',
+                          action='store_true',
+                          default=False,
+                          dest='extra_test_process',
+                          help='Include packages matching the test pattern in audit or coverage processing (default: no).')
         # Flag that show if use PyLint
         self.audit = False
         # Check if PyLint is available
@@ -135,6 +153,12 @@ class NoseXUnit(Plugin, object):
         self.search_source = options.search_source
         # Check if has to search tests
         self.search_test = options.search_test
+        # Store included packages
+        self.extra_include = options.extra_include
+        # Store excluded packages
+        self.extra_exclude = options.extra_exclude
+        # Store if process packages with test pattern
+        self.extra_test_process = options.extra_test_process
         # Check if audit is available
         if self.audit:
             # Check if enable audit
@@ -204,7 +228,9 @@ class NoseXUnit(Plugin, object):
             # Create the target folder for audit
             ntools.create(self.audit_target)
             # Get the package list for audit
-            self.audit_packages = [ package for package in self.packages.keys() if package.find('.') == -1 and not self.conf.testMatch.search(package) and not package in nconst.AUDIT_COVER_EXCLUDE ]
+            self.audit_packages = [ package for package in self.packages.keys() if package.find('.') == -1 and self.enable(package) ]
+            # Check at least one
+            if self.audit_packages == []: raise nexcepts.NoseXUnitError('no package to audit')
             # Start audit
             self.audit_cls = naudit.audit(self.source, self.audit_packages, self.audit_output, self.audit_target, self.audit_config)
         # No test class
@@ -218,13 +244,20 @@ class NoseXUnit(Plugin, object):
             # Get the skipped ones
             self.skipped = sys.modules.keys()[:]
             # Get the coverage packages
-            self.cover_packages = self.packages.keys()
-            # Pop excluded packages
-            for package in nconst.AUDIT_COVER_EXCLUDE:
-                # Actually pop
-                if package in self.cover_packages: self.cover_packages.remove(package)
+            self.cover_packages = [ package for package in self.packages.keys() if self.enable(package) ]
+            # Check at least one
+            if self.cover_packages == []: raise nexcepts.NoseXUnitError('no package to cover')
             # Start coverage
             ncover.start(self.cover_clean, self.cover_packages, self.cover_target)
+
+    def enable(self, package):
+        '''Check if a package has to be processed'''
+        # Check if is a test
+        if self.conf.testMatch.search(package) and not self.extra_test_process: return False
+        # Check if include list defined
+        if self.extra_include != []: return ( package in self.extra_include )
+        # Check exclusions
+        else: return ( package not in self.extra_exclude )
 
     def prepareTest(self, test):
         '''Add the generated tests'''
@@ -349,16 +382,14 @@ class NoseXUnit(Plugin, object):
         # Check if coverage enabled
         if self.cover:
             # Get the package to cover
-            entries = [ package for entry, package in sys.modules.items() if self.docover(entry, package) ]
+            entries = [ package for entry, package in sys.modules.items() if self.consider(entry, package) ]
             # Stop coverage
             ncover.stop(stream, entries, self.cover_target, self.cover_collect)
 
-    def docover(self, entry, package):
+    def consider(self, entry, package):
         '''Check if the package as to be covered'''
         # Check if skipped
         if entry in self.skipped: return False
-        # Check if a test
-        if self.conf.testMatch.search(entry): return False
         # Check if has a __file__ attribute
         if not hasattr(package, '__file__'): return False
         # Get the path

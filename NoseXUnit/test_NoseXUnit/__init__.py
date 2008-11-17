@@ -179,6 +179,12 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
     OPT_CORE_SEARCH_SOURCE = '--search-source'
     
     OPT_CORE_SEARCH_TEST = '--search-test'
+    
+    OPT_EXTRA_INCLUDE = '--extra-include'
+
+    OPT_EXTRA_EXCLUDE = '--extra-exclude'
+
+    OPT_EXTRA_TEST_PROCESS = '--extra-test-process'
 
     OPT_AUDIT_ENABLE = '--enable-audit'
     
@@ -236,7 +242,16 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
         if s_src: self.add(self.OPT_CORE_SEARCH_SOURCE)
         # Check is search tests
         if s_tst: self.add(self.OPT_CORE_SEARCH_TEST)
-        
+    
+    def setUpExtra(self, includes=[], excludes=[], test_process=False):
+        '''Set up extra configuration'''
+        # Go threw the included packages
+        for include in includes: self.add(self.OPT_EXTRA_INCLUDE, include)
+        # Go threw the excluded packages
+        for exclude in excludes: self.add(self.OPT_EXTRA_EXCLUDE, exclude)
+        # Set test processing flag
+        if test_process: self.add(self.OPT_EXTRA_TEST_PROCESS)
+    
     def setUpAudit(self, tg=None, out=None, conf=None):
         '''Set up audit'''
         # Enable

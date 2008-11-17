@@ -136,9 +136,9 @@ class Sources(dict):
             # Go deeper
             pos += 1
         # Check the path
-        if not ntools.identical(current.path(), path):
+        if not ntools.identical(current.path(), path):    # pylint: disable-msg=E1103
             # Invalid path
-            raise nexcepts.AuditError('two path for %s, only one expected:\n- %s\n- %s' % (current.full(), current.path(), path))
+            raise nexcepts.AuditError('two path for %s, only one expected:\n- %s\n- %s' % (current.full(), current.path(), path))    # pylint: disable-msg=E1103
         # Return the source
         return current
 
@@ -265,54 +265,37 @@ def audit(source, packages, output, target, config=None):
     check_pylintrc()
     # Check output
     if output not in outputs(): raise nexcepts.AuditError("specified output doesn't exist: %s" % output)
-    # Get a wrapper
-    wrapper = AuditWrapper(output, target)
-    # Get the exchange path
-    exchange = os.path.join(target, nconst.AUDIT_EXCHANGE_FILE)
-    # Get the context
-    context = os.environ.copy()
-    # Add exchange configuration
-    context[nconst.AUDIT_EXCHANGE_ENTRY] = exchange
-    # Go threw the packages
-    for package in packages:
-        # Set the next package
-        wrapper.next(package)
-        # Get the data
-        entries = (package, output, target, config)
-        # Save data
-        ntools.exchange(exchange, entries)
-        # Get line
-        line = [sys.executable, '-c', 'import %s ; %s.external()' % (__name__, __name__) ]
-        # Call subprocess
-        subprocess.Popen(line, cwd=source, env=context).wait()
-        # Get the wrapper
-        wrapper, error = ntools.exchange(exchange)
-        # Check if errors
-        if error is not None:
-            # Log the error
-            logger.error(error)
-            # Step out
-            raise nexcepts.AuditError('failed to audit %s' % package)
-    # Store test cases
-    cases = []
+    # Call PyLint
+    listing = client(source, packages, output, target, config=config)
+    # Generate sources and test cases
+    sources, cases = generate(listing)
+    # Create report
+    report(target, sources)
+    # Return the cases
+    return cases
+
+def generate(listing):
+    '''Generate source objects and test cases'''
     # Get sources objects
     sources = Sources()
+    # Store tests
+    cases = []
     # Go threw the packages to generate the tests
-    for package in wrapper.cases.keys():
+    for package in listing.keys():
         # Create the class
         tcls = new.classobj('TestAudit%s' % package.capitalize(), (AuditTestCase, ), {})
         # Go threw the tests
-        for i, case in enumerate(wrapper.cases[package]):
+        for i, case in enumerate(listing[package]):
             # Unpack
             oid, loc, out = case
             # Get data on location
-            path, desc, useless, line = location
+            path, desc, useless, line = loc
             # Get the source object
             source = sources.get(path, desc)
             # Create the entry for the data
             entry = Entry(oid, line, out)
             # Add it to the source object
-            source.add(entry)
+            source.add(entry)    # pylint: disable-msg=E1103
             # Create the test
             def test(cls):
                 # Get the output
@@ -326,14 +309,51 @@ description: %s
                 # Actually fail
                 cls.fail(output)
             # Set to the class
-            setattr(tcls, 'test_%d' % i+1, test)
-    # Create report
-    report(target, sources)
-    # Return the cases
-    return cases
+            setattr(tcls, 'test_%d' % (i+1, ), test)
+        # Add case
+        cases.append(tcls)
+    # Return sources and tests
+    return sources, cases
 
-def external():
-    '''Entry point for the search'''
+def client(source, packages, output, target, config=None):
+    '''Client side to call PyLint'''
+    # Get the exchange path
+    exchange = os.path.join(target, nconst.AUDIT_EXCHANGE_FILE)
+    # Get the context
+    context = os.environ.copy()
+    # Add exchange configuration
+    context[nconst.AUDIT_EXCHANGE_ENTRY] = exchange
+    # Store the test entries
+    listing = {}
+    # Go threw the packages
+    for package in packages:
+        # Get the data
+        entries = (package, output, target, config)
+        # Save data
+        ntools.exchange(exchange, entries)
+        # Get line
+        line = [sys.executable, '-c', 'import %s ; %s.server()' % (__name__, __name__) ]
+        # Call subprocess
+        p = subprocess.Popen(line, cwd=source, env=context)
+        # Wait till the end
+        p.wait()
+        # Check return code
+        if p.returncode != 0: raise nexcepts.AuditError('failed to call PyLint in a distinct process: %s returned' % p.returncode)
+        # Get the wrapper
+        errors, error = ntools.exchange(exchange)
+        # Check if errors
+        if error is not None:
+            # Log the error
+            logger.error(error)
+            # Step out
+            raise nexcepts.AuditError('failed to audit %s' % package)
+        # Add to errors
+        listing[package] = errors
+    # Return results
+    return listing
+
+def server():
+    '''Server side to call PyLint'''
     # Initialize wrapper
     errors = []
     # Storage path
@@ -357,12 +377,10 @@ def external():
         pylint.lint.Run(argv, wrapper)
         # Store errors
         errors = wrapper.errors
-        # Save cases
-        ntools.exchange(exchange, wrapper.errors)
     # Get error
-    except: ntools.exchange(exchange, (errors, traceback.format_exc()))
+    except: ntools.exchange(exchange, data=(errors, traceback.format_exc()))
     # No error
-    else: ntools.exchange(exchange, (errors, None))
+    else: ntools.exchange(exchange, data=(errors, None))
 
 def report(target, sources):
     '''Create report'''
@@ -396,11 +414,11 @@ def report(target, sources):
         except: logger.error(traceback.format_exc())
 
 def check_pylintrc(path=None):
-    """
+    '''
     Check that the PyLint configuration file
     doesn't contain parameters that override
     the NoseXUnit configuration
-    """
+    '''
     # Get the forbidden options
     forbid = {'REPORTS': ['output-format',
                           'include-ids',

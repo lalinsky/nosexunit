@@ -276,7 +276,7 @@
   <body>
     <div id="menu">
       <h2><a href="https://sourceforge.net/project/showfiles.php?group_id=192367">Download</a></h2>
-      <p>Current version: 0.3.1</p>
+      <p>Current version: 0.3.2</p>
    
       <h2><a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit on Sourceforge</a></h2>
       <p>Report bugs, request features, browse source...</p>
@@ -415,6 +415,21 @@ def foo():
 </pre>
 	  </div>
 
+      <div class="section">
+        <h1>Specify packages processed by Audit or Coverage</h1>
+		<p>To explicitely specify packages processed by Audit or Coverage, you can use following options (all optionals):
+		<ul class="simple">
+		  <li><i>--extra-include=PACKAGE</i> to process the specified package,
+		  <li><i>--extra-exclude=PACKAGE</i> to do not process the specified package (<i>ez_setup</i> and <i>setup</i> by default, useless if <i>--extra-include</i> specified),
+		  <li><i>--extra-test-process</i> to process packages matching the test pattern.
+		</ul>
+		<p>Options <i>--extra-include</i> and <i>--extra-exclude</i> can be specified many times. For example:</p>
+<pre class="literal-block">
+nosetests [options] --extra-include foo1 --extra-include foo2
+</pre>
+		</p>
+	  </div>
+
       <h2>NoseXUnit Usage</h2>
 
       <p>NoseXUnit launch options can be display by running:
@@ -435,6 +450,16 @@ def foo():
                         only if --source-folder is defined.
   --search-test         Search tests in folders with no __init__.py file
                         (default does nothing).
+  --extra-include=EXTRA_INCLUDE
+                        Include packages for audit or coverage processing
+                        (default: take all packages in --source-folder, except
+                        those defined in --extra-exclude).
+  --extra-exclude=EXTRA_EXCLUDE
+                        Exclude packages for audit or coverage processing
+                        (default: ez_setup, setup). Useless if --extra-include
+                        defined.
+  --extra-test-process  Include packages matching the test pattern in audit or
+                        coverage processing (default: no).
   --enable-audit        Use PyLint to audit source code (default: no)
   --audit-target=AUDIT_TARGET
                         Output folder for PyLint reports (default is
@@ -460,6 +485,13 @@ def foo():
       requests <a href="http://sourceforge.net/tracker2/?group_id=192367">here</a>.</p>
       
       <h2><a name="changelog"></a>Changelog</h2>
+
+      <p>0.3.2</p>
+      <ul class="simple">
+        <li>ID 2184206: Include or exclude packages for audit or coverage (options <i>--extra-include</i> and <i>--extra-exclude</i>),</li>
+        <li>Consider or not packages matching the test pattern (option <i>--extra-test-process</i>),</li>
+        <li>Audit and coverage can be played together (<i>PyLint</i> started in another process).</li>
+      </ul>
 
       <p>0.3.1</p>
       <ul class="simple">

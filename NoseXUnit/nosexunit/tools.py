@@ -264,7 +264,7 @@ def exchange(path, data=None):
     Save data if `data` is not defined
     '''
     # Check if save of load
-    if data:
+    if data is not None:
         # Get the file descriptor
         fd = open(path, 'wb')
         # Close the file
