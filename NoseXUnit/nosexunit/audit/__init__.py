@@ -212,7 +212,7 @@ class AuditWrapper(object):
         # Set the target folder
         self.target = target
         # Get the test cases
-        self.errors = []
+        self.data = []
         # Get the reporter
         self.reporter = create_reporter(self.output)
 
@@ -224,12 +224,10 @@ class AuditWrapper(object):
         '''
         # Call reporter
         self.reporter.add_message(msg_id, location, msg)
-        # Check if error and add a test
-        if msg_id[0] in ['E', 'F', ]:
-            # Get the absolute path for location
-            path, desc, useless, line = location
-            # Add errors
-            self.errors.append( (msg_id, (os.path.abspath(path), desc, useless, line), msg) )
+        # Get the absolute path for location
+        path, desc, useless, line = location
+        # Add errors
+        self.data.append( (msg_id, (os.path.abspath(path), desc, useless, line), msg) )
 
     def __getattr__(self, name):
         '''Delegate for getters'''
@@ -272,13 +270,13 @@ def audit(source, packages, output, target, config=None):
     # Call PyLint
     listing = client(source, packages, output, target, config=config)
     # Generate sources and test cases
-    sources, cases = generate(source, listing)
+    sources, cases = generate(listing)
     # Create report
     report(target, sources)
     # Return the cases
     return cases
 
-def generate(source, listing):
+def generate(listing):
     '''Generate source objects and test cases'''
     # Get sources objects
     sources = Sources()
@@ -287,11 +285,11 @@ def generate(source, listing):
     # Go threw the packages to generate the tests
     for package in listing.keys():
         # Create the class
-        tcls = new.classobj('TestAudit%s' % package.capitalize(), (AuditTestCase, ), {})
+        functions = [] 
         # Go threw the tests
-        for i, case in enumerate(listing[package]):
+        for data in listing[package]:
             # Unpack
-            oid, loc, out = case
+            oid, loc, out = data
             # Get data on location
             path, desc, useless, line = loc
             # Get the source object
@@ -300,8 +298,8 @@ def generate(source, listing):
             entry = Entry(oid, line, out)
             # Add it to the source object
             source.add(entry)    # pylint: disable-msg=E1103
-            # Create the test
-            def test(cls):
+            # Check if has to generate a test
+            if oid[0] in ['E', 'F', ]:
                 # Get the output
                 output = """%s
 location   : %s
@@ -310,12 +308,22 @@ package    : %s
 function   : %s
 description: %s
 """ % (oid, loc[0], loc[3], loc[1], loc[2], out)
-                # Actually fail
-                cls.fail(output)
-            # Set to the class
-            setattr(tcls, 'test_%d' % (i+1, ), test)
-        # Add case
-        cases.append(tcls)
+                # Get the code
+                code = 'def test(cls): cls.fail(%s)' % (repr(output), )
+                # Execute it
+                exec(code)
+                # Add to functions
+                functions.append(test)
+        # Create a test case only if there is at least one function
+        if functions != []:
+            # Create the test case
+            case = new.classobj('TestAudit%s' % package.capitalize(), (AuditTestCase, ), {})
+            # Go threw the functions
+            for i, function in enumerate(functions):
+                # Set the class attribute
+                setattr(case, 'test_%d' % (i+1, ), function)
+            # Add case
+            cases.append(case)
     # Return sources and tests
     return sources, cases
 
@@ -324,7 +332,7 @@ def client(source, packages, output, target, config=None):
     # Get the exchange path
     exchange = os.path.join(target, nconst.AUDIT_EXCHANGE_FILE)
     # Get the context
-    context = os.environ.copy()
+    context = ntools.expand(os.environ.copy())
     # Add exchange configuration
     context[nconst.AUDIT_EXCHANGE_ENTRY] = exchange
     # Store the test entries
@@ -344,7 +352,7 @@ def client(source, packages, output, target, config=None):
         # Check return code
         if p.returncode != 0: raise nexcepts.AuditError('failed to call PyLint in a distinct process: %s returned' % p.returncode)
         # Get the wrapper
-        errors, error = ntools.exchange(exchange)
+        data, error = ntools.exchange(exchange)
         # Check if errors
         if error is not None:
             # Log the error
@@ -352,14 +360,14 @@ def client(source, packages, output, target, config=None):
             # Step out
             raise nexcepts.AuditError('failed to audit %s' % package)
         # Add to errors
-        listing[package] = errors
+        listing[package] = data
     # Return results
     return listing
 
 def server():
     '''Server side to call PyLint'''
     # Initialize wrapper
-    errors = []
+    data = []
     # Storage path
     exchange = os.getenv(nconst.AUDIT_EXCHANGE_ENTRY)
     # Get errors
@@ -380,11 +388,11 @@ def server():
         # Start PyLint
         pylint.lint.Run(argv, wrapper)
         # Store errors
-        errors = wrapper.errors
+        data = wrapper.data
     # Get error
-    except: ntools.exchange(exchange, data=(errors, traceback.format_exc()))
+    except: ntools.exchange(exchange, data=(data, traceback.format_exc()))
     # No error
-    else: ntools.exchange(exchange, data=(errors, None))
+    else: ntools.exchange(exchange, data=(data, None))
 
 def report(target, sources):
     '''Create report'''

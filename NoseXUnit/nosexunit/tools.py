@@ -283,3 +283,28 @@ def exchange(path, data=None):
         fd.close()
         # Return data
         return data
+
+def expand(environ):
+    '''Expand paths in environment variables'''
+    # Go threw the variables
+    for entry in environ.keys():
+        # Check if in expanded list
+        if entry.lower().strip() in ['path', 'ld_library_path', 'libpath', 'shlib_path', ]:
+            # Go threw the path
+            sections = environ[entry].split(os.pathsep)
+            # Get the new list
+            atarashii = []
+            # Go threw the parts
+            for section in sections:
+                # Delete quote if on Win32
+                if not on_posix(): section = section.replace('"', '') 
+                # Get the right one
+                section = section.strip()
+                # Check that useful
+                if section != '':
+                    # Get the absolute path
+                    atarashii.append(os.path.abspath(section))
+            # Replace entry
+            environ[entry] = os.pathsep.join(atarashii)
+    # Return dictionary
+    return environ
