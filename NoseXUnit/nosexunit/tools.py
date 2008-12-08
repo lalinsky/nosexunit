@@ -289,7 +289,7 @@ def expand(environ):
     # Go threw the variables
     for entry in environ.keys():
         # Check if in expanded list
-        if entry.lower().strip() in ['path', 'ld_library_path', 'libpath', 'shlib_path', ]:
+        if entry.lower().strip() in ['path', 'ld_library_path', 'libpath', 'shlib_path', 'pythonpath', ]:
             # Go threw the path
             sections = environ[entry].split(os.pathsep)
             # Get the new list
