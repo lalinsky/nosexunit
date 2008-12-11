@@ -202,7 +202,7 @@ def on_posix():
     # Check OS name
     return os.name == 'posix'
 
-def extract(package, entry, folder, bn=None):
+def extract(package, entry, folder, bn=None, binary=False):
     '''Extract file with provided entry from the provided package'''
     # Get the content of the entry
     content = pkg_resources.resource_string(package, entry)
@@ -211,7 +211,7 @@ def extract(package, entry, folder, bn=None):
     # Here no
     else: path = os.path.join(folder, entry)
     # Save content
-    save(content, path, binary=False)
+    save(content, path, binary=binary)
 
 def kiding(package, entry, folder, bn=None, output='html', **kwarg):
     '''Extract file with provided entry from the provided package and process the template'''
@@ -230,7 +230,7 @@ def kiding(package, entry, folder, bn=None, output='html', **kwarg):
     # Close the file descriptor
     fd.close()
 
-def extract_js_css(target):
+def extract_pic_js_css(target):
     '''Extract the CSS and the Java Script in the target folder'''
     # Get package
     import pygments.formatters
@@ -238,6 +238,12 @@ def extract_js_css(target):
     extract(__name__, 'nosexunit.js', target)
     # Extract the CSS
     extract(__name__, 'nosexunit.css', target)
+    # Get the images folder
+    folder = os.path.join(target, 'images')
+    # Create it
+    create(folder)
+    # Get the PNG in it
+    extract(__name__, 'blank.png', folder, binary=True)
     # Get the highlight CSS
     save(pygments.formatters.HtmlFormatter().get_style_defs('.highlight'), os.path.join(target, 'highlight.css'), binary=False)
 

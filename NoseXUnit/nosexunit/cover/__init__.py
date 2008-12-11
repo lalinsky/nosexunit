@@ -122,7 +122,7 @@ class Sources(list):
 def report(target, sources):
     '''Create report'''
     # Extract the Java Script and the CSS
-    ntools.extract_js_css(target)
+    ntools.extract_pic_js_css(target)
     # Get the date
     date = datetime.datetime.now()
     # Process the index
