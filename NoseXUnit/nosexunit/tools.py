@@ -4,6 +4,7 @@ import pickle
 import logging
 import pkg_resources
 
+import nosexunit
 import nosexunit.const as nconst
 import nosexunit.excepts as nexcepts
 
@@ -292,6 +293,10 @@ def exchange(path, data=None):
 
 def expand(environ):
     '''Expand paths in environment variables'''
+    # Check if NoseXUnit in PYTHONPATH
+    set = False
+    # Get the path
+    path = os.path.dirname(os.path.dirname(os.path.abspath(nosexunit.__file__)))
     # Go threw the variables
     for entry in environ.keys():
         # Check if in expanded list
@@ -310,7 +315,15 @@ def expand(environ):
                 if section != '':
                     # Get the absolute path
                     atarashii.append(os.path.abspath(section))
+            # If PYTHONPATH, add NoseXUnit folder
+            if entry.lower().strip() == 'pythonpath':
+                # Add folder
+                atarashii.append(path)
+                # Set flag
+                set = True
             # Replace entry
             environ[entry] = os.pathsep.join(atarashii)
+    # Check if set
+    if not set: environ['PYTHONPATH'] = path
     # Return dictionary
     return environ

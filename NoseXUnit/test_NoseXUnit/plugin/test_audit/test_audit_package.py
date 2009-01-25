@@ -5,7 +5,7 @@ import test_NoseXUnit
 import nosexunit.tools as ntools
 import nosexunit.excepts as nexcepts
 
-class TestClean(test_NoseXUnit.PluginTestCase):
+class TestAuditPackage(test_NoseXUnit.PluginTestCase):
     
     def setUpCase(self):
         content = """
@@ -18,10 +18,12 @@ def hello():
         self.suitepath = self.source
         self.setUpCore(self.core_target, self.source)
         self.setUpAudit(self.audit_target)
-        print self.target
 
     def test(self):
-        print self.output
+        self.assertExists(os.path.join(self.audit_target, 'foo_1-code.html'))
+        self.assertExists(os.path.join(self.audit_target, 'foo_1-detail.html'))
+        self.assertExists(os.path.join(self.audit_target, 'foo_1.foo_2-code.html'))
+        self.assertExists(os.path.join(self.audit_target, 'foo_1.foo_2-detail.html'))
 
 if __name__=="__main__":
     test_NoseXUnit.main()

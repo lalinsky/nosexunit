@@ -9,6 +9,7 @@ import ConfigParser
 
 import nose.plugins
 
+import nosexunit.const
 import nosexunit.plugin
 
 # Absolute folder of this file
@@ -200,6 +201,8 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
     
     OPT_COVER_CLEAN = '--cover-clean'
 
+    OPT_COVER_COLLECT = '--cover-collect'
+
     def setUp(self):
         '''Set up for plug in tests'''
         # Call test set up
@@ -232,7 +235,7 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
         # Else this is an option with value
         else: self.args.append('%s=%s' % (opt, value))
         
-    def setUpCore(self, tg=None, src=None, s_src=False, s_tst=False):
+    def setUpCore(self, tg=None, src=None, s_src=False, s_tst=False, e_inc=[], e_exc=None, e_tst=False):
         '''Set up the core'''
         # Set target is asked
         if tg: self.add(self.OPT_CORE_TARGET, tg) 
@@ -242,15 +245,15 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
         if s_src: self.add(self.OPT_CORE_SEARCH_SOURCE)
         # Check is search tests
         if s_tst: self.add(self.OPT_CORE_SEARCH_TEST)
-    
-    def setUpExtra(self, includes=[], excludes=[], test_process=False):
+
+    def setUpExtra(self, includes=[], excludes=nosexunit.const.AUDIT_COVER_EXCLUDE, tp=False):
         '''Set up extra configuration'''
         # Go threw the included packages
         for include in includes: self.add(self.OPT_EXTRA_INCLUDE, include)
         # Go threw the excluded packages
         for exclude in excludes: self.add(self.OPT_EXTRA_EXCLUDE, exclude)
         # Set test processing flag
-        if test_process: self.add(self.OPT_EXTRA_TEST_PROCESS)
+        if tp: self.add(self.OPT_EXTRA_TEST_PROCESS)
     
     def setUpAudit(self, tg=None, out=None, conf=None):
         '''Set up audit'''
@@ -263,14 +266,16 @@ class PluginTestCase(nose.plugins.PluginTester, TestCase):
         # Set configuration
         if conf: self.add(self.OPT_AUDIT_CONFIG, conf)
 
-    def setUpCover(self, tg=None, clean=False):
+    def setUpCover(self, tg=None, clean=False, collect=False):
         '''Set up audit'''
         # Enable
         self.add(self.OPT_COVER_ENABLE)
         # Set target is asked
         if tg: self.add(self.OPT_COVER_TARGET, tg)
-        # Set  output
+        # Check if clean results
         if clean: self.add(self.OPT_COVER_CLEAN)
+        # Check if has to collect
+        if collect: self.add(self.OPT_COVER_COLLECT)
         # Get coverage package
         import coverage
         # Clean coverage

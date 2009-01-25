@@ -346,11 +346,17 @@ def client(source, packages, output, target, config=None):
         # Get line
         line = [sys.executable, '-c', 'import %s ; %s.server()' % (__name__, __name__) ]
         # Call subprocess
-        p = subprocess.Popen(line, cwd=source, env=context)
+        p = subprocess.Popen(line, cwd=source, env=context, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        # Get the output
+        display = p.stdout.read()
         # Wait till the end
         p.wait()
         # Check return code
-        if p.returncode != 0: raise nexcepts.AuditError('failed to call PyLint in a distinct process: %s returned' % p.returncode)
+        if p.returncode != 0:
+            # Log the output
+            logger.error(display)
+            # Raise
+            raise nexcepts.AuditError('failed to call PyLint in a distinct process: %s returned' % p.returncode)
         # Get the wrapper
         data, error = ntools.exchange(exchange)
         # Check if errors
