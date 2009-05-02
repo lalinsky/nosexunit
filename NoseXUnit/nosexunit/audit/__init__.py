@@ -18,7 +18,6 @@ logger =  logging.getLogger('%s.%s' % (nconst.LOGGER, __name__))
 
 try:
     import pylint.lint
-    import pylint.utils
     import pylint.config
     import pylint.reporters
 except: pass
@@ -398,8 +397,8 @@ def server():
         pylint.lint.Run(argv, wrapper)
     # Get exit code
     except SystemExit, e:
-        # Check if allowed
-        if e.code in pylint.utils.MSG_TYPES_STATUS.values(): ntools.exchange(exchange, data=(data, None))
+        # Check if allowed (32 is parsing error in PyLint)
+        if e.code != 32: ntools.exchange(exchange, data=(data, None))
         # Not allowed
         else: ntools.exchange(exchange, data=(data, traceback.format_exc()))
     # Get error
@@ -497,7 +496,6 @@ def available():
         import kid
         import pygments
         import pylint.lint
-        import pylint.utils
         import pylint.config
         import pygments.lexers
         import pylint.reporters
