@@ -181,7 +181,9 @@ def report(target, sources):
         # Unable to process the package
         except: logger.error(traceback.format_exc())
     # Create the COBERTURA and CLOVER reports
-    for fn in ['cobertura.xml', 'clover.xml', ]: ntools.kiding(__name__, fn, target, output='xml', sources=sources, version=nosexunit.__version__, date='%d'%time.mktime(date.timetuple()))
+    for fn, tg in [ ('cobertura.xml', target), ('clover.xml', os.path.join(target, 'clover')), ]:
+        # Create the file
+        ntools.kiding(__name__, fn, tg, output='xml', sources=sources, version=nosexunit.__version__, date='%d' % time.mktime(date.timetuple()))
 
 def parse(content):
     '''Parse the report'''
