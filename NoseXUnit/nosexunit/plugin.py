@@ -239,8 +239,8 @@ class NoseXUnit(Plugin, object):
         if self.cover:
             # Check if source folder specified
             if not self.source: raise nexcepts.NoseXUnitError('source folder required for coverage')
-            # Create the target folder for audit (also create clover folder)
-            ntools.create(os.path.join(self.cover_target, 'clover'))
+            # Create the target folder for audit
+            ntools.create(self.cover_target)
             # Get the skipped ones
             self.skipped = sys.modules.keys()[:]
             # Get the coverage packages
