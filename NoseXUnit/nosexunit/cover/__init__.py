@@ -288,7 +288,7 @@ def annotate(morfs, directory, ignore_errors=0, omit_prefixes=[]):
             # In order to generate the ?cover at the right place, we're obliges to copy the source file in the destination folder
             path = os.path.join(directory, '%s.py' % morf.__name__)
             # Actually copy the source
-            shutil.copy(filename, path)
+            shutil.copyfile(filename, path)
             # Process the file
             coverage.the_coverage.annotate_file(path, statements, excluded, missing, directory)
             # Delete file
