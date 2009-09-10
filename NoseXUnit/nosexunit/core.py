@@ -2,7 +2,9 @@
 import os
 import sys
 import time
+import codecs
 import logging
+import StringIO
 import traceback
 
 import nosexunit.const as nconst
@@ -14,19 +16,41 @@ logger =  logging.getLogger('%s.%s' % (nconst.LOGGER, __name__))
 class StdRecorder:
     '''Class to capture the standard outputs'''
     
-    def __init__(self):
+    def __init__(self, fd):
         '''Initialize with an empty record'''
+        # Initialize record
+        self.record = None
+        # Do not record directly
         self.rec = False
-        self.record = ''
+        # Try to get the encoding with the stream
+        try: self.encoding = fd.encoding
+        # No encoding attribute
+        except AttributeError: self.encoding = None
+        # If not specified, set to UTF-8
+        if self.encoding is None: self.encoding = 'utf-8'
+        # Save the stream for
+        self.save = fd
+        # Prepare the record
+        self.reset()
 
     def __getattr__(self, attr):
         '''Call the functions on the output'''
         return getattr(self.save, attr)
     
-    def write(self, string):
+    def write(self, value):
         '''Write on the record and on the standard output'''
-        if self.rec: self.record += string
-        return self.save.write(string)
+        # Check if UTF-8 value
+        if isinstance(value, unicode):
+            # Write on record
+            if self.rec: self.record.write(value)
+            # Encode to write output
+            self.save.write(value.encode(self.encoding, 'replace'))
+        # Basic string
+        else:
+            # Write on record but decode before
+            if self.rec: self.record.write(value.decode(self.encoding, 'replace'))
+            # Write on default
+            return self.save.write(value)
     
     def start(self):
         '''Start to record the stream given by constructor'''
@@ -38,11 +62,11 @@ class StdRecorder:
 
     def content(self):
         '''Return the content of the record'''
-        return self.record
+        return self.record.getvalue()
 
     def reset(self):
         '''Reset the recorder'''
-        self.record = ''
+        self.record = StringIO.StringIO()
     
     def end(self):
         '''End the recorder'''
@@ -53,8 +77,7 @@ class StdOutRecoder(StdRecorder):
     
     def __init__(self):
         '''Replace the sys.stdout output by this one'''
-        StdRecorder.__init__(self)
-        self.save = sys.stdout
+        StdRecorder.__init__(self, sys.stdout)
         sys.stdout = self
         
     def end(self):
@@ -67,8 +90,7 @@ class StdErrRecorder(StdRecorder):
     
     def __init__(self):
         '''Replace the sys.stderr output by this one'''
-        StdRecorder.__init__(self)
-        self.save = sys.stderr
+        StdRecorder.__init__(self, sys.stderr)
         sys.stderr = self
         
     def end(self):
@@ -80,7 +102,7 @@ class XTestElmt:
     '''Root class for suites and tests'''
 
     def __init__(self):
-        '''Init the test element'''
+        '''Initialize the test element'''
         self.begin = None
         self.end = None
 
@@ -182,7 +204,7 @@ class XSuite(XTestElmt):
         if self.getNbrTestsFromKinds([nconst.TEST_SUCCESS, nconst.TEST_FAIL, nconst.TEST_ERROR, ]) > 0:
             xname = self.getXmlName(folder)
             xpath = self.getXmlPath(folder, xname)
-            xfile = open(xpath, 'w')
+            xfile = codecs.open(xpath, 'w', encoding='utf-8')
             self.writeXmlOnStream(xfile, xname)
             xfile.close()
 
