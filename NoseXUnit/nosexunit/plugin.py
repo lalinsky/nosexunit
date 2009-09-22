@@ -143,7 +143,7 @@ class NoseXUnit(Plugin, object):
         # Check if processes enabled
         try: self.fork = 1 != max(int(options.multiprocess_workers), 1)
         # If multiprocess not available
-        except: self.fork = 1
+        except: self.fork = False
         # ---------------------------------------------------------------------
         # CORE
         # ---------------------------------------------------------------------
