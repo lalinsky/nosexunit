@@ -31,6 +31,9 @@ class NoseXUnit(Plugin, object):
         '''Add launch options for NoseXUnit'''
         # Call super
         Plugin.options(self, parser, env)
+        # ---------------------------------------------------------------------
+        # CORE
+        # ---------------------------------------------------------------------
         # Add test target folder
         parser.add_option('--core-target',
                           action='store',
@@ -73,77 +76,75 @@ class NoseXUnit(Plugin, object):
                           default=False,
                           dest='extra_test_process',
                           help='Include packages matching the test pattern in audit or coverage processing (default: no).')
-        # Flag that show if use PyLint
-        self.audit = False
-        # Check if PyLint is available
-        if naudit.available():
-            # Available
-            self.audit = True
-            # Add option to enable audit
-            parser.add_option('--enable-audit',
-                              action='store_true',
-                              default=False,
-                              dest='audit',
-                              help='Use PyLint to audit source code (default: no)')        
-            # Add PyLint target folder
-            parser.add_option('--audit-target',
-                              action='store',
-                              default=nconst.TARGET_AUDIT,
-                              dest='audit_target',
-                              help='Output folder for PyLint reports (default is %s).' % nconst.TARGET_AUDIT)
-            # Add PyLint output
-            parser.add_option('--audit-output',
-                              action='store',
-                              default=nconst.AUDIT_DEFAULT_REPORTER,
-                              dest='audit_output',
-                              help='Output for audit reports: %s (default: %s).' % (', '.join(naudit.outputs()), nconst.AUDIT_DEFAULT_REPORTER))
-            # Add PyLint configuration file
-            parser.add_option('--audit-config',
-                              action='store',
-                              default=None,
-                              dest='audit_config',
-                              help='Configuration file for PyLint (optional).')
-        # Log that not available
-        else: logger.warn('audit not available in NoseXUnit, please check dependences')
-        # Flag that show if use coverage
-        self.cover = False
-        # Check if coverage is available
-        if ncover.available():
-            # Available
-            self.cover = True
-            # Add option to enable coverage
-            parser.add_option('--enable-cover',
-                              action='store_true',
-                              default=False,
-                              dest='cover',
-                              help='Use coverage to audit source code (default: no)')        
-            # Add coverage target folder
-            parser.add_option('--cover-target',
-                              action='store',
-                              default = nconst.TARGET_COVER,
-                              dest='cover_target',
-                              help='Output folder for coverage reports (default is %s).' % nconst.TARGET_COVER)
-            # Check if clean folder
-            parser.add_option('--cover-clean',
-                              action='store_true',
-                              default=False,
-                              dest='cover_clean',
-                              help='Clean previous coverage results (default: no).')
-            # Collect extra coverage files in target folder
-            parser.add_option('--cover-collect',
-                              action='store_true',
-                              default=False,
-                              dest='cover_collect',
-                              help='Collect other coverage files potentially generated in cover target folder. These extra files should have the following pattern: %s.* (default: no).' % nconst.COVER_OUTPUT_BASE)
-        # Log that not available
-        else: logger.warn('coverage not available in NoseXUnit, please check dependences')
-        
+        # ---------------------------------------------------------------------
+        # AUDIT
+        # ---------------------------------------------------------------------
+        # Add option to enable audit
+        parser.add_option('--enable-audit',
+                          action='store_true',
+                          default=False,
+                          dest='audit',
+                          help='Use PyLint to audit source code (default: no)')        
+        # Add PyLint target folder
+        parser.add_option('--audit-target',
+                          action='store',
+                          default=nconst.TARGET_AUDIT,
+                          dest='audit_target',
+                          help='Output folder for PyLint reports (default is %s).' % nconst.TARGET_AUDIT)
+        # Add PyLint output
+        parser.add_option('--audit-output',
+                          action='store',
+                          default=nconst.AUDIT_DEFAULT_REPORTER,
+                          dest='audit_output',
+                          help='Output for audit reports: %s (default: %s).' % (', '.join(naudit.outputs()), nconst.AUDIT_DEFAULT_REPORTER))
+        # Add PyLint configuration file
+        parser.add_option('--audit-config',
+                          action='store',
+                          default=None,
+                          dest='audit_config',
+                          help='Configuration file for PyLint (optional).')
+        # ---------------------------------------------------------------------
+        # COVER
+        # ---------------------------------------------------------------------
+        # Add option to enable coverage
+        parser.add_option('--enable-cover',
+                          action='store_true',
+                          default=False,
+                          dest='cover',
+                          help='Use coverage to audit source code (default: no)')        
+        # Add coverage target folder
+        parser.add_option('--cover-target',
+                          action='store',
+                          default = nconst.TARGET_COVER,
+                          dest='cover_target',
+                          help='Output folder for coverage reports (default is %s).' % nconst.TARGET_COVER)
+        # Check if clean folder
+        parser.add_option('--cover-clean',
+                          action='store_true',
+                          default=False,
+                          dest='cover_clean',
+                          help='Clean previous coverage results (default: no).')
+        # Collect extra coverage files in target folder
+        parser.add_option('--cover-collect',
+                          action='store_true',
+                          default=False,
+                          dest='cover_collect',
+                          help='Collect other coverage files potentially generated in cover target folder. These extra files should have the following pattern: %s.* (default: no).' % nconst.COVER_OUTPUT_BASE)
+    
     def configure(self, options, config):
         '''Configure the plug in'''
         # Call super
         Plugin.configure(self, options, config)
+        # ---------------------------------------------------------------------
+        # NOSE
+        # ---------------------------------------------------------------------
         # Store the configuration
         self.config = config
+        # Check if processes enabled
+        self.fork = 1 != max(int(options.multiprocess_workers), 1)
+        # ---------------------------------------------------------------------
+        # CORE
+        # ---------------------------------------------------------------------
         # Store test target folder
         self.core_target = os.path.abspath(options.core_target)
         # Store source folder
@@ -159,10 +160,19 @@ class NoseXUnit(Plugin, object):
         self.extra_exclude = options.extra_exclude
         # Store if process packages with test pattern
         self.extra_test_process = options.extra_test_process
-        # Check if audit is available
+        # ---------------------------------------------------------------------
+        # AUDIT
+        # ---------------------------------------------------------------------
+        # Check if enable audit
+        self.audit = options.audit
+        # Check if audit asked
         if self.audit:
-            # Check if enable audit
-            self.audit = options.audit
+            # Check if available
+            available, error = naudit.available()
+            # Check if available
+            if not available:
+                # Raise
+                raise nexcepts.PluginError('audit not available in NoseXUnit, error while loading dependences: %s' % error)
             # Store PyLint target folder
             self.audit_target = os.path.abspath(options.audit_target)
             # Store PyLint configuration file
@@ -170,10 +180,19 @@ class NoseXUnit(Plugin, object):
             else: self.audit_config = None
             # Get the output
             self.audit_output = options.audit_output.lower()
-        # Check if coverage is available
+        # ---------------------------------------------------------------------
+        # COVER
+        # ---------------------------------------------------------------------
+        # Check if coverage is enabled
+        self.cover = options.cover
+        # Check if audit asked
         if self.cover:
-            # Check if coverage is enabled
-            self.cover = options.cover
+            # Check if available
+            available, error = ncover.available()
+            # Check if available
+            if not available:
+                # Raise
+                raise nexcepts.PluginError('coverage not available in NoseXUnit, error while loading dependences: %s' % error)
             # Check if clean folder
             self.cover_clean = options.cover_clean
             # Check if collect
@@ -409,5 +428,21 @@ class NoseXUnit(Plugin, object):
         self.stderr.end()
         # Clean STDERR recorder
         self.stdout.end()
-
- 
+        # Check if fork
+        if self.fork:
+            # Results not directly collected, available only there
+            fork_suite = ncore.XSuite('multiprocess')
+            # Create a fake id for successful tests
+            class FakeTest(object):
+                # Store unique success ID
+                def __init__(self, pos): self.pos = pos
+                # Add ID function
+                def id(self): return 'nose.multiprocess.success%d' % self.pos
+            # Add success
+            for i in range(result.testsRun): fork_suite.addTest(ncore.XTest(nconst.TEST_SUCCESS, FakeTest(i)))
+            # Add errors
+            for test, err in result.errors: fork_suite.addTest(ncore.XTest(nconst.TEST_ERROR, test, err=err))
+            # Add failures
+            for test, err in result.failures: fork_suite.addTest(ncore.XTest(nconst.TEST_FAIL, test, err=err)) 
+            # Write
+            fork_suite.writeXml(self.core_target)

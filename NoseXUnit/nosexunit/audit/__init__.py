@@ -313,7 +313,7 @@ description: %s
                 # Execute it
                 exec(code)
                 # Add to functions
-                functions.append(test)
+                functions.append(test)    # pylint: disable-msg=E0602
         # Create a test case only if there is at least one function
         if functions != []:
             # Create the test case
@@ -501,6 +501,6 @@ def available():
         import pylint.reporters
         import pygments.formatters
     # Unable to get it
-    except: return False
+    except BaseException, e: return False, str(e)    # pylint: disable-msg=E0601
     # OK, it's available
-    return True
+    return True, None

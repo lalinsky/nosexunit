@@ -63,6 +63,10 @@ TEST_DEPRECATED = 4
 # --------------------------------
 UNK_TIME = 0
 
+# Value for unknown errors
+# ------------------------
+UNK_ERR_TYPE = 'unknown'
+
 # Init
 # ----
 INIT = '__init__.py'

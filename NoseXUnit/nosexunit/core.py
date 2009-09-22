@@ -246,13 +246,22 @@ class XTest(XTestElmt):
     def _get_err_type(self):
         '''Return the human readable error type for err'''
         if self.err != None:
-            return '%s.%s' % (self.err[1].__class__.__module__, self.err[1].__class__.__name__)
+            if isinstance(self.err, tuple): return '%s.%s' % (self.err[1].__class__.__module__, self.err[1].__class__.__name__)
+            else:
+                lines = self.err.replace('\r', '').split('\n')
+                while len(lines) != 0 and lines[-1].strip() == '': lines.pop()
+                if len(lines) != 0:
+                    err_type = lines[-1].strip().split()[0]
+                    if err_type[-1] == ':': err_type = err_type[:-1]
+                    return err_type
+                else: return nconst.UNK_ERR_TYPE
         else: return None
 
     def _get_err_formated(self):
         '''Return the the formated error for output'''
         if self.err != None:
-            return '<![CDATA[%s]]>' % '\n'.join((''.join(traceback.format_exception(*self.err))).split('\n')[:-1])
+            if isinstance(self.err, tuple): return '<![CDATA[%s]]>' % '\n'.join((''.join(traceback.format_exception(*self.err))).split('\n')[:-1])
+            else: return '<![CDATA[%s]]>' % self.err
         else: return None
 
     def writeXmlOnStream(self, stream):

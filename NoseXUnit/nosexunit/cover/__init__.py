@@ -231,9 +231,9 @@ def available():
         import pygments.lexers
         import pygments.formatters
     # Unable to get it
-    except: return False
+    except BaseException, e: return False, str(e)    # pylint: disable-msg=E0601
     # OK, it's available
-    return True
+    return True, None
 
 def start(clean, packages, target):
     '''Start the coverage'''

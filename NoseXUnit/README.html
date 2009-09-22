@@ -276,7 +276,7 @@
   <body>
     <div id="menu">
       <h2><a href="https://sourceforge.net/project/showfiles.php?group_id=192367">Download</a></h2>
-      <p>Current version: 0.3.2</p>
+      <p>Current version: 0.3.3</p>
    
       <h2><a href="https://sourceforge.net/projects/nosexunit/">NoseXUnit on Sourceforge</a></h2>
       <p>Report bugs, request features, browse source...</p>
@@ -299,7 +299,7 @@
           </a>
           <br />Schema of the JUnit standard output.
         </li>
-        <li><a href="http://www.atlassian.com/software/bamboo/">Bamboo</a>
+        <li><a href="https://hudson.dev.java.net/">Hudson</a>, <a href="http://www.atlassian.com/software/bamboo/">Bamboo</a>
           <br />Interesting test reports.
         </li>
       </ul>
@@ -309,11 +309,11 @@
 
       <h1>NoseXUnit: JUnit like XML reporting for PyUnit</h1>
 
-      <p>NoseXUnit provide a convenient way to produce JUnit like XML reports with PyUnit.</p>
+      <p>NoseXUnit provide a convenient way to produce JUnit like XML reports with PyUnit. It also provides code coverage and audit features with beautiful reports generation.</p>
       
       <div id="news">
         <h2>News</h2>
-        <p>NoseXUnit is now compatible with Nose 0.10.4. We also included optional PyLint and Coverage report generation.</p>
+        <p>NoseXUnit is now compatible with Nose 0.11.1. This version 0.3.3 is mainly a bug fix version. We also added a degraded mode to handle multiprocess test runner (--processes option in nose).</p>
       </div>
 
       <h2>Backgroud</h2>
@@ -324,7 +324,7 @@
       However, some Java tests frameworks like JUnit with <a href="http://maven.apache.org/surefire/">Surefire</a>
       outputs convenient test report in a simple XML format.
       This makes further processing simple and convenient for softwares.
-      For example, <a href="http://www.atlassian.com/software/bamboo/">Bamboo</a> creates
+      For example, <a href="https://hudson.dev.java.net/">Hudson</a> and <a href="http://www.atlassian.com/software/bamboo/">Bamboo</a> creates
       interesting reports thanks these XML reports.</p>
       
       <p class="note">Our goal is to provide a way to produce test reports in this simple XML format with PyUnit.</p>
@@ -485,6 +485,14 @@ nosetests [options] --extra-include foo1 --extra-include foo2
       requests <a href="http://sourceforge.net/tracker2/?group_id=192367">here</a>.</p>
       
       <h2><a name="changelog"></a>Changelog</h2>
+
+      <p>0.3.3</p>
+      <ul class="simple">
+        <li>Degraded mode for multiprocess test runner (--processes option in nose),</li>
+        <li>ID 2738914: Catch all sys.exit of PyLint,</li>
+        <li>ID 2784278: Allow unicode strings in standard and error outputs,</li>
+        <li>ID 2681443: Allow sources to be read only.</li>
+      </ul>
 
       <p>0.3.2</p>
       <ul class="simple">
