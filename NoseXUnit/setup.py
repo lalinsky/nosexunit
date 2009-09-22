@@ -20,7 +20,7 @@ setup(
     long_description = "A plugin for nose/nosetests that produces an XML report of the result of a test.",
     author = "Olivier Mansion",
     author_email = "nosexunit@gmail.com",
-    zip_safe = False,
+    zip_safe = True,
     license = "GNU Library or Lesser General Public License (LGPL)",
     url = "http://nosexunit.sourceforge.net",
     packages = ['nosexunit',
