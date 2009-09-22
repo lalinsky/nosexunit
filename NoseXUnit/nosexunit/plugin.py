@@ -141,7 +141,9 @@ class NoseXUnit(Plugin, object):
         # Store the configuration
         self.config = config
         # Check if processes enabled
-        self.fork = 1 != max(int(options.multiprocess_workers), 1)
+        try: self.fork = 1 != max(int(options.multiprocess_workers), 1)
+        # If multiprocess not available
+        except: self.fork = 1
         # ---------------------------------------------------------------------
         # CORE
         # ---------------------------------------------------------------------
@@ -193,6 +195,10 @@ class NoseXUnit(Plugin, object):
             if not available:
                 # Raise
                 raise nexcepts.PluginError('coverage not available in NoseXUnit, error while loading dependences: %s' % error)
+            # Check if no worker test runners
+            if self.fork:
+                # Raise
+                raise nexcepts.PluginError('coverage not available with --processes option')
             # Check if clean folder
             self.cover_clean = options.cover_clean
             # Check if collect
