@@ -477,7 +477,9 @@ def outputs():
     # Add the NoseXUnit output
     out = [nconst.AUDIT_DEFAULT_REPORTER, ]
     # Add default outputs
-    out.extend(pylint.lint.REPORTER_OPT_MAP.keys())
+    try: out.extend(pylint.lint.REPORTER_OPT_MAP.keys())
+    # PyLint not available
+    except: pass
     # Return the available outputs
     return out
 
