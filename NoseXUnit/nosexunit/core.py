@@ -4,7 +4,6 @@ import sys
 import time
 import codecs
 import logging
-import StringIO
 import traceback
 
 import nosexunit.const as nconst
@@ -26,8 +25,8 @@ class StdRecorder:
         try: self.encoding = fd.encoding
         # No encoding attribute
         except AttributeError: self.encoding = None
-        # If not specified, set to UTF-8
-        if self.encoding is None: self.encoding = 'utf-8'
+        # If not specified, display in ASCII to avoid errors
+        if self.encoding is None: self.encoding = 'ascii'
         # Save the stream for
         self.save = fd
         # Prepare the record
@@ -42,15 +41,17 @@ class StdRecorder:
         # Check if UTF-8 value
         if isinstance(value, unicode):
             # Write on record
-            if self.rec: self.record.write(value)
+            if self.rec: self.record += value
             # Encode to write output
-            self.save.write(value.encode(self.encoding, 'replace'))
+            return self.save.write(value.encode(self.encoding, 'replace'))
         # Basic string
         else:
+            # Get an UNICODE representation
+            deco = value.decode('utf-8', 'replace')
             # Write on record but decode before
-            if self.rec: self.record.write(value.decode(self.encoding, 'replace'))
+            if self.rec: self.record += deco
             # Write on default
-            return self.save.write(value)
+            return self.save.write(deco.encode(self.encoding, 'replace'))
     
     def start(self):
         '''Start to record the stream given by constructor'''
@@ -62,11 +63,11 @@ class StdRecorder:
 
     def content(self):
         '''Return the content of the record'''
-        return self.record.getvalue()
+        return self.record
 
     def reset(self):
         '''Reset the recorder'''
-        self.record = StringIO.StringIO()
+        self.record = u''
     
     def end(self):
         '''End the recorder'''
@@ -190,7 +191,7 @@ class XSuite(XTestElmt):
         else:
             cpt = 1
             while True:
-                name = "%s.%d" % (self.getName(), cpt)
+                name = '%s.%d' % (self.getName(), cpt)
                 path = self.getXmlPath(folder, name)
                 if not os.path.exists(path): return name
                 cpt += 1
@@ -213,13 +214,13 @@ class XSuite(XTestElmt):
         nbrTests = self.getNbrTestsFromKinds([nconst.TEST_SUCCESS, nconst.TEST_FAIL, nconst.TEST_ERROR, ])
         nbrFails = self.getNbrTestsFromKind(nconst.TEST_FAIL)
         nbrErrors = self.getNbrTestsFromKind(nconst.TEST_ERROR)
-        stream.write('<?xml version="1.0" encoding="UTF-8"?>')
-        stream.write('<testsuite name="%s" tests="%d" errors="%d" failures="%d" time="%.3f">' % (xname, nbrTests, nbrErrors, nbrFails, self.getTime()))
+        stream.write(u'<?xml version="1.0" encoding="UTF-8"?>')
+        stream.write(u'<testsuite name="%s" tests="%d" errors="%d" failures="%d" time="%.3f">' % (xname, nbrTests, nbrErrors, nbrFails, self.getTime()))
         for test in self.tests:
             test.writeXmlOnStream(stream)
-        stream.write('<system-out><![CDATA[%s]]></system-out>' % self.stdout)
-        stream.write('<system-err><![CDATA[%s]]></system-err>' % self.stderr)
-        stream.write('</testsuite>')
+        stream.write(u'<system-out><![CDATA[%s]]></system-out>' % self.stdout)    # self.stdout is encoded in UTF-8
+        stream.write(u'<system-err><![CDATA[%s]]></system-err>' % self.stderr)    # self.stderr is encoded in UTF-8
+        stream.write(u'</testsuite>')
 
 class XTest(XTestElmt):
     '''Class for the test notion'''
@@ -237,22 +238,22 @@ class XTest(XTestElmt):
 
     def getName(self):
         '''Return the name of the method'''
-        return '.'.join(ntools.get_test_id(self.elmt).split('.')[2:])
+        return u'.'.join(cast(ntools.get_test_id(self.elmt)).split(u'.')[2:])
 
     def getClass(self):
         '''Return the class name'''
-        return '.'.join(ntools.get_test_id(self.elmt).split('.')[:2])
+        return u'.'.join(cast(ntools.get_test_id(self.elmt)).split(u'.')[:2])
 
     def _get_err_type(self):
         '''Return the human readable error type for err'''
         if self.err != None:
-            if isinstance(self.err, tuple): return '%s.%s' % (self.err[1].__class__.__module__, self.err[1].__class__.__name__)
+            if isinstance(self.err, tuple): return u'%s.%s' % (self.err[1].__class__.__module__, self.err[1].__class__.__name__)
             else:
-                lines = self.err.replace('\r', '').split('\n')
+                lines = cast(self.err).replace(u'\r', u'').split(u'\n')
                 while len(lines) != 0 and lines[-1].strip() == '': lines.pop()
                 if len(lines) != 0:
                     err_type = lines[-1].strip().split()[0]
-                    if err_type[-1] == ':': err_type = err_type[:-1]
+                    if err_type[-1] == u':': err_type = err_type[:-1]
                     return err_type
                 else: return nconst.UNK_ERR_TYPE
         else: return None
@@ -260,20 +261,27 @@ class XTest(XTestElmt):
     def _get_err_formated(self):
         '''Return the the formated error for output'''
         if self.err != None:
-            if isinstance(self.err, tuple): return '<![CDATA[%s]]>' % '\n'.join((''.join(traceback.format_exception(*self.err))).split('\n')[:-1])
-            else: return '<![CDATA[%s]]>' % self.err
+            if isinstance(self.err, tuple): return u'<![CDATA[%s]]>' % u'\n'.join((u''.join([ cast(part) for part in traceback.format_exception(*self.err) ])).split(u'\n')[:-1])
+            else: return u'<![CDATA[%s]]>' % cast(self.err)
         else: return None
 
     def writeXmlOnStream(self, stream):
         '''Write the xml result on the stream'''
         if self.kind in [nconst.TEST_SUCCESS, nconst.TEST_FAIL, nconst.TEST_ERROR, ]:
-            stream.write('<testcase classname="%s' % self.getClass() + '" name="%s' % self.getName() + '"' + ' time="%.3f"' % self.getTime())
-            if self.kind == nconst.TEST_SUCCESS: stream.write('/>')
+            stream.write(u'<testcase classname="%s" name="%s" time="%.3f"' % (self.getClass(), self.getName(), self.getTime()))
+            if self.kind == nconst.TEST_SUCCESS: stream.write(u'/>')
             else:
-                stream.write('>')
-                if self.kind == nconst.TEST_ERROR: tag = 'error'
-                else: tag = 'failure'
-                stream.write('<%s type="%s">' % (tag, self._get_err_type()))
+                stream.write(u'>')
+                if self.kind == nconst.TEST_ERROR: tag = u'error'
+                else: tag = u'failure'
+                stream.write(u'<%s type="%s">' % (tag, self._get_err_type()))
                 stream.write(self._get_err_formated())
-                stream.write('</%s>' % tag)
-                stream.write('</testcase>')
+                stream.write(u'</%s>' % tag)
+                stream.write(u'</testcase>')
+
+def cast(value):
+    '''Get a 8-bits value'''
+    # Check if this is an UNICODE value
+    if isinstance(value, unicode): return value
+    # Else try to get an UNICODE object to encode it
+    else: return value.decode('utf-8', 'replace')

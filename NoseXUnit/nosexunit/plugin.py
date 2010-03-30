@@ -3,8 +3,6 @@ import os
 import sys
 import time
 import logging
-import StringIO
-import traceback
 
 import nose
 import nose.util

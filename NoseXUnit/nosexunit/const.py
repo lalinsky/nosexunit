@@ -65,7 +65,7 @@ UNK_TIME = 0
 
 # Value for unknown errors
 # ------------------------
-UNK_ERR_TYPE = 'unknown'
+UNK_ERR_TYPE = u'unknown'
 
 # Init
 # ----
