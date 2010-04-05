@@ -73,10 +73,18 @@ class Source(object):
             visitor = ncyclo.PathGraphingAstVisitor()
             # Go threw
             visitor.preorder(ast, visitor)
-            # Store the complexity
-            self.i_cyclo = max([ graph.complexity() for graph in visitor.graphs.values() ])
+            # Get the values
+            values = visitor.graphs.values()
+            # Check if at least one, else this is a really basic package
+            if values != []:
+                # Store the highest
+                self.i_cyclo = max([ graph.complexity() for graph in values ])
+            # Basic file, like __init__ probably
+            else: self.i_cyclo = 0
         # Failed to do it
-        except: logger.error('failed to cyclonize %s' % self.full())
+        except Exception, e:
+            # Log a warning
+            logger.warning('failed to get the code complexity of %s: %s' % (self.full(), e))
 
     def linize(self, lines):
         '''Store the code lines'''
