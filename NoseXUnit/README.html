@@ -419,13 +419,13 @@ def foo():
         <h1>Specify packages processed by Audit or Coverage</h1>
 		<p>To explicitely specify packages processed by Audit or Coverage, you can use following options (all optionals):
 		<ul class="simple">
-		  <li><i>--extra-include=PACKAGE</i> to process the specified package,
-		  <li><i>--extra-exclude=PACKAGE</i> to do not process the specified package (<i>ez_setup</i> and <i>setup</i> by default, useless if <i>--extra-include</i> specified),
+		  <li><i>--extra-include=PACKAGE</i> to process the specified package (<i>PACKAGE</i> is a regex),
+		  <li><i>--extra-exclude=PACKAGE</i> to do not process the specified package (<i>PACKAGE</i> is a regex, set to <i>^ez_setup$</i> and <i>^setup$</i> by default, useless if <i>--extra-include</i> specified),
 		  <li><i>--extra-test-process</i> to process packages matching the test pattern.
 		</ul>
-		<p>Options <i>--extra-include</i> and <i>--extra-exclude</i> can be specified many times. For example:</p>
+		<p>Options <i>--extra-include</i> and <i>--extra-exclude</i> can be specified many times. For example to include packages <i>foo</i>, <i>foo2</i> and all their subpackages or modules:</p>
 <pre class="literal-block">
-nosetests [options] --extra-include foo1 --extra-include foo2
+nosetests [options] --extra-include=^foo1.*$ --extra-include=^foo2.*$
 </pre>
 		</p>
 	  </div>
@@ -449,15 +449,16 @@ nosetests [options] --extra-include foo1 --extra-include foo2
                         sys.path if they don't contain __init__.py file. Works
                         only if --source-folder is defined.
   --search-test         Search tests in folders with no __init__.py file
-                        (default does nothing).
-  --extra-include=EXTRA_INCLUDE
+                        (default: do nothing).
+  --extra-include=EXTRA_INCLUDES
                         Include packages for audit or coverage processing
                         (default: take all packages in --source-folder, except
-                        those defined in --extra-exclude).
-  --extra-exclude=EXTRA_EXCLUDE
+                        those defined in --extra-exclude). Package name
+                        specified with regex.
+  --extra-exclude=EXTRA_EXCLUDES
                         Exclude packages for audit or coverage processing
-                        (default: ez_setup, setup). Useless if --extra-include
-                        defined.
+                        (default: ^ez_setup$, ^setup$). Useless if --extra-
+                        include defined. Package name specified with regex.
   --extra-test-process  Include packages matching the test pattern in audit or
                         coverage processing (default: no).
   --enable-audit        Use PyLint to audit source code (default: no)
@@ -488,6 +489,7 @@ nosetests [options] --extra-include foo1 --extra-include foo2
 
       <p>0.3.4</p>
       <ul class="simple">
+        <li>Options <i>--extra-include</i> and <i>--extra-exclude</i> are now regex,
         <li>ID 2904155: Encoding issue in JUnit like reports.</li>
       </ul>
 

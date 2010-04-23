@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 import os
+import re
 import sys
 import time
 import logging
@@ -60,14 +61,14 @@ class NoseXUnit(Plugin, object):
         parser.add_option('--extra-include',
                           action='append',
                           default=[],
-                          dest='extra_include',
-                          help='Include packages for audit or coverage processing (default: take all packages in --source-folder, except those defined in --extra-exclude).')
+                          dest='extra_includes',
+                          help='Include packages for audit or coverage processing (default: take all packages in --source-folder, except those defined in --extra-exclude). Package name specified with regex.')
         # Package to do not process in audit or coverage extensions
         parser.add_option('--extra-exclude',
                           action='append',
                           default=nconst.AUDIT_COVER_EXCLUDE,
-                          dest='extra_exclude',
-                          help='Exclude packages for audit or coverage processing (default: %s). Useless if --extra-include defined.' % (', '.join(nconst.AUDIT_COVER_EXCLUDE), ))
+                          dest='extra_excludes',
+                          help='Exclude packages for audit or coverage processing (default: %s). Useless if --extra-include defined. Package name specified with regex.' % (', '.join(nconst.AUDIT_COVER_EXCLUDE), ))
         # Package to do not process in audit or coverage extensions
         parser.add_option('--extra-test-process',
                           action='store_true',
@@ -155,9 +156,9 @@ class NoseXUnit(Plugin, object):
         # Check if has to search tests
         self.search_test = options.search_test
         # Store included packages
-        self.extra_include = options.extra_include
+        self.extra_includes = [ re.compile(extra_include) for extra_include in options.extra_includes ]
         # Store excluded packages
-        self.extra_exclude = options.extra_exclude
+        self.extra_excludes = [ re.compile(extra_exclude) for extra_exclude in options.extra_excludes ]
         # Store if process packages with test pattern
         self.extra_test_process = options.extra_test_process
         # ---------------------------------------------------------------------
@@ -278,9 +279,20 @@ class NoseXUnit(Plugin, object):
         # Check if is a test
         if self.conf.testMatch.search(package) and not self.extra_test_process: return False
         # Check if include list defined
-        if self.extra_include != []: return ( package in self.extra_include )
+        if self.extra_includes != []: return self.packageMatch(package, self.extra_includes)
         # Check exclusions
-        else: return ( package not in self.extra_exclude )
+        else: return not self.packageMatch(package, self.extra_excludes)
+
+    def packageMatch(self, package, patterns):
+        '''Go threw the patterns to check if package match'''
+        # Go threw the patterns
+        for p in patterns:
+            # Check if match
+            if p.match(package):
+                # Yes!
+                return True
+        # Failed to match
+        return False
 
     def prepareTest(self, test):
         '''Add the generated tests'''

@@ -81,7 +81,7 @@ AUDIT_EXCHANGE_FILE = 'exchange.pkl'
 AUDIT_EXCHANGE_ENTRY = 'NOSEXUNIT_EXCHANGE_FILE'
 
 # Exclude from audit and cover
-AUDIT_COVER_EXCLUDE = ['ez_setup', 'setup', ]
+AUDIT_COVER_EXCLUDE = ['^ez_setup$', '^setup$', ]
 
 # Get default coverage output file
 COVER_OUTPUT_BASE = '.coverage'
