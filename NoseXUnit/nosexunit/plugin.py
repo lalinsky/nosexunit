@@ -156,9 +156,9 @@ class NoseXUnit(Plugin, object):
         # Check if has to search tests
         self.search_test = options.search_test
         # Store included packages
-        self.extra_includes = [ re.compile(extra_include) for extra_include in options.extra_includes ]
+        self.extra_includes = [ re.compile(extra_include) for extra_include in nose.util.tolist(options.extra_includes) ]
         # Store excluded packages
-        self.extra_excludes = [ re.compile(extra_exclude) for extra_exclude in options.extra_excludes ]
+        self.extra_excludes = [ re.compile(extra_exclude) for extra_exclude in nose.util.tolist(options.extra_excludes) ]
         # Store if process packages with test pattern
         self.extra_test_process = options.extra_test_process
         # ---------------------------------------------------------------------
