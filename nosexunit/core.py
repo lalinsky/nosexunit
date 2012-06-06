@@ -5,6 +5,7 @@ import time
 import codecs
 import logging
 import traceback
+from xml.sax.saxutils import quoteattr
 
 import nosexunit.const as nconst
 import nosexunit.tools as ntools
@@ -268,13 +269,13 @@ class XTest(XTestElmt):
     def writeXmlOnStream(self, stream):
         '''Write the xml result on the stream'''
         if self.kind in [nconst.TEST_SUCCESS, nconst.TEST_FAIL, nconst.TEST_ERROR, ]:
-            stream.write(u'<testcase classname="%s" name="%s" time="%.3f"' % (self.getClass(), self.getName(), self.getTime()))
+            stream.write(u'<testcase classname=%s name=%s time="%.3f"' % (quoteattr(self.getClass()), quoteattr(self.getName()), self.getTime()))
             if self.kind == nconst.TEST_SUCCESS: stream.write(u'/>')
             else:
                 stream.write(u'>')
                 if self.kind == nconst.TEST_ERROR: tag = u'error'
                 else: tag = u'failure'
-                stream.write(u'<%s type="%s">' % (tag, self._get_err_type()))
+                stream.write(u'<%s type=%s>' % (tag, quoteattr(self._get_err_type())))
                 stream.write(self._get_err_formated())
                 stream.write(u'</%s>' % tag)
                 stream.write(u'</testcase>')
